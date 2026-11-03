@@ -1,0 +1,23 @@
+{
+  "name": "DWEC - Proyecto DOM",
+  "build": { "dockerfile": "Dockerfile" },
+  "runArgs": ["--security-opt", "label=disable"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vitest.explorer",
+        "usernamehw.errorlens",
+        "bierner.markdown-mermaid"
+      ]
+    }
+  },
+  "forwardPorts": [3901],
+  "portsAttributes": {
+    "3901": { "label": "Página", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm install && node --version && npm --version && echo '✅ Contenedor listo'",
+  "postAttachCommand": "npx --yes serve@14.2.6 --no-clipboard --listen 3901 .",
+  "remoteUser": "node"
+}

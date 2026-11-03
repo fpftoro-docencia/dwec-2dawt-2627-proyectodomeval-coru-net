@@ -1,0 +1,8 @@
+# Prettier solo formatea el código: la documentación en Markdown se escribe a mano
+*.md
+# Lo que generan las herramientas
+docs/
+dist/
+coverage/
+playwright-report/
+test-results/
