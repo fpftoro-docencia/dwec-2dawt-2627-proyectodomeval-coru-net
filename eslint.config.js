@@ -15,6 +15,16 @@ export default [
       'no-var': 'error',
       'prefer-const': 'error',
       eqeqeq: 'error',
+      // Tres reglas añadidas para el Sprint 1 (Requisito 9):
+      camelcase: 'error',
+      curly: 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  {
+    files: ['scripts/**'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];
