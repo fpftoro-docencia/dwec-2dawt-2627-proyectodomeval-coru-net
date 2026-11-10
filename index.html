@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia inspirada en Specialized -->
+    <link rel="stylesheet" href="css/estilos.css" />
+  </head>
+  <body>
+    <!-- Barra superior de utilidades -->
+    <aside class="top-utility-bar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span>Club Ciclista Oficial · Federación de Ciclismo 2026/2027</span>
+        <div class="d-flex gap-3">
+          <a href="registro.html">¿No eres socio? Regístrate</a>
+          <span>·</span>
+          <a href="#contacto">Contacto</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Cabecera principal -->
+    <header class="main-header">
+      <div class="container d-flex justify-content-between align-items-center py-2">
+        <a href="index.html" class="brand-logo">
+          <span>PEDAL<span class="brand-badge">&</span>CADENCIA</span>
+        </a>
+        <nav aria-label="Navegación pública" class="d-none d-md-flex gap-2">
+          <a href="index.html" class="nav-link-custom active">Inicio</a>
+          <a href="registro.html" class="nav-link-custom">Inscripción</a>
+        </nav>
+        <div>
+          <a href="registro.html" class="btn btn-outline-dark btn-sm fw-bold px-3">HACERSE SOCIO</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Banner con diseño Specialized y Tarjeta de Login integrada -->
+    <main class="flex-grow-1">
+      <section class="hero-specialized">
+        <div class="container">
+          <div class="row align-items-center gy-5">
+            <!-- Columna Izquierda: Mensaje de Impacto -->
+            <div class="col-lg-7">
+              <span class="hero-subtitle">Temporada 2026 · Área de Socios</span>
+              <h1 class="hero-title">El acceso prioritario<br />no espera</h1>
+              <p class="hero-text">
+                Plataforma oficial de gestión del club. Consulta tu ficha federativa, gestiona las
+                bicicletas registradas y accede a las convocatorias de ruta exclusivas.
+              </p>
+              <div class="d-flex flex-wrap gap-3">
+                <a href="#formulario-acceso" class="btn-specialized-primary">Acceder ahora</a>
+                <a href="registro.html" class="btn-specialized-outline">Crear nueva cuenta</a>
+              </div>
+            </div>
+
+            <!-- Columna Derecha: Tarjeta de Inicio de Sesión -->
+            <div class="col-lg-5" id="formulario-acceso">
+              <div class="form-card-container">
+                <div class="form-card-header">
+                  <h2 class="form-card-title">Acceso de Socios</h2>
+                  <small class="text-muted">Introduce tus credenciales para identificarte</small>
+                </div>
+
+                <!-- Región de avisos accesible (Requisito 2 y 8) -->
+                <div
+                  id="contenedor-avisos"
+                  class="contenedor-avisos"
+                  role="status"
+                  aria-live="polite"
+                ></div>
+
+                <form id="formulario-login" novalidate>
+                  <!-- Nombre de usuario o correo -->
+                  <div class="mb-3">
+                    <label for="campo-usuario" class="form-label">Nombre de usuario</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="campo-usuario"
+                      name="usuario"
+                      required
+                      autocomplete="username"
+                      placeholder="Ej. pedaleador26"
+                      aria-describedby="error-usuario"
+                    />
+                    <div id="error-usuario" class="invalid-feedback">
+                      Por favor, indica tu nombre de usuario.
+                    </div>
+                  </div>
+
+                  <!-- Contraseña -->
+                  <div class="mb-4">
+                    <label for="campo-clave" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                      <input
+                        type="password"
+                        class="form-control"
+                        id="campo-clave"
+                        name="clave"
+                        required
+                        autocomplete="current-password"
+                        placeholder="••••••••"
+                        aria-describedby="error-clave"
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary boton-toggle-clave"
+                        id="boton-toggle-clave"
+                        aria-label="Mostrar contraseña"
+                        title="Mostrar contraseña"
+                        aria-pressed="false"
+                      >
+                        <span class="icono-ojo" aria-hidden="true">👁️</span>
+                      </button>
+                      <div id="error-clave" class="invalid-feedback">
+                        Por favor, introduce tu contraseña.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Botón de Envío -->
+                  <button type="submit" id="boton-entrar" class="btn-specialized-dark">
+                    Entrar al Club
+                  </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center">
+                  <p class="mb-0 text-muted" style="font-size: 0.9rem">
+                    ¿Todavía no formas parte?
+                    <a href="registro.html" class="fw-bold text-dark">Regístrate como socio</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección de Ventajas del Club -->
+      <section class="py-5 bg-white">
+        <div class="container py-4">
+          <div class="row g-4 text-center">
+            <div class="col-md-4">
+              <div class="p-3">
+                <h3 class="h5 fw-bold text-uppercase">Licencia Federativa</h3>
+                <p class="text-muted">
+                  Tramitación directa de seguro de accidentes y carnet ciclista federado.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3">
+                <h3 class="h5 fw-bold text-uppercase">Parque de Bicicletas</h3>
+                <p class="text-muted">
+                  Registro de hasta 3 bicicletas por socio con número de serie y taller propio.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3">
+                <h3 class="h5 fw-bold text-uppercase">Salidas y Grupos</h3>
+                <p class="text-muted">
+                  Rutas semanales de carretera, gravel y montaña con niveles adaptados.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+
+    <!-- Script modular de la página de inicio de sesión -->
+    <script type="module" src="js/paginas/index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ficha de Socio · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia -->
+    <link rel="stylesheet" href="css/estilos.css" />
+  </head>
+  <body>
+    <!-- Cabecera privada con menú compartido y botón de cierre de sesión -->
+    <header class="main-header"></header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 py-4">
+      <div class="container">
+        <!-- Región de avisos accesible (role="status") -->
+        <div
+          id="contenedor-avisos"
+          class="contenedor-avisos"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="form-card-container">
+              <div class="form-card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <h1 class="form-card-title">Ficha de Inscripción de Socio</h1>
+                  <small class="text-muted">Gestión de datos de membresía ciclista</small>
+                </div>
+                <a href="listado.html" class="btn btn-outline-secondary btn-sm fw-bold"
+                  >← Volver al Listado</a
+                >
+              </div>
+
+              <!-- Maqueta de los campos previstos para el Sprint 2 -->
+              <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                <div>
+                  <strong>Estructura lista para Sprint 2:</strong> Esta página incluirá el
+                  formulario de alta y edición con los 5 campos de la entidad, campo condicional
+                  (licencia federativa) y grupo dinámico de bicicletas (0 a 3).
+                </div>
+              </div>
+
+              <div class="text-center py-4">
+                <a href="listado.html" class="btn btn-specialized-dark">Regresar al Listado</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+
+    <!-- Script modular de la página de ficha -->
+    <script type="module" src="js/paginas/ficha.js"></script>
+  </body>
+</html>

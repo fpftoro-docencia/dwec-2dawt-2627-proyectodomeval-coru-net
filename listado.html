@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Listado de Socios · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia -->
+    <link rel="stylesheet" href="css/estilos.css" />
+  </head>
+  <body>
+    <!-- Cabecera privada con menú compartido y botón de cierre de sesión -->
+    <header class="main-header"></header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 py-4">
+      <div class="container">
+        <!-- Región de avisos accesible (role="status") -->
+        <div
+          id="contenedor-avisos"
+          class="contenedor-avisos"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+          <div>
+            <h1 class="h2 fw-bold text-uppercase mb-1">Listado de Socios Ciclistas</h1>
+            <p class="text-muted mb-0">
+              Gestión de fichas federativas y bicicletas registradas en el club
+            </p>
+          </div>
+          <div>
+            <a href="ficha.html" class="btn btn-danger fw-bold text-uppercase px-3">
+              + Nuevo Socio
+            </a>
+          </div>
+        </div>
+
+        <!-- Espacio reservado para el Sprint 2 (Buscador, tabla y paginación) -->
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 text-center py-5">
+            <div class="display-6 text-muted mb-3">🚴</div>
+            <h2 class="h5 fw-bold">Sprint 1 completado</h2>
+            <p class="text-muted max-w-500 mx-auto">
+              El sistema de autenticación, roles y sesión está activo. En el Sprint 2 se incorporará
+              el CRUD completo, buscador con debounce, modal de borrado accesible y paginación
+              sincronizada con la URL.
+            </p>
+            <a href="ficha.html" class="btn btn-outline-dark btn-sm fw-bold"
+              >Ver maqueta de la Ficha</a
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+
+    <!-- Script modular de la página de listado -->
+    <script type="module" src="js/paginas/listado.js"></script>
+  </body>
+</html>

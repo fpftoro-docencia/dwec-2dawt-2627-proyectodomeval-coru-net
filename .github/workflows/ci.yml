@@ -1,0 +1,53 @@
+name: Integración continua
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  Calidad:
+    name: Comprobación de calidad y estilo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Analizar código con ESLint
+        run: npm run lint
+
+      - name: Verificar formato con Prettier
+        run: npm run format:check
+
+  Tests:
+    name: Pruebas unitarias
+    needs: Calidad
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Ejecutar batería de tests con Vitest
+        run: npm test
