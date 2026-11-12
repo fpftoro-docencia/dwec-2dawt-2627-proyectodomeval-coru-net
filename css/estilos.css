@@ -104,15 +104,14 @@ body {
   position: relative;
   background:
     linear-gradient(
-      135deg,
-      rgba(15, 15, 17, 0.88) 0%,
-      rgba(26, 26, 29, 0.72) 50%,
-      rgba(15, 15, 17, 0.92) 100%
+      90deg,
+      rgba(15, 15, 17, 0.85) 0%,
+      rgba(15, 15, 17, 0.45) 55%,
+      rgba(15, 15, 17, 0.75) 100%
     ),
-    url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1920&q=80')
-      center/cover no-repeat;
+    url('../img/hero-mtb.jpg') center 35% / cover no-repeat;
   color: #ffffff;
-  padding: 5rem 0 6rem 0;
+  padding: 5.5rem 0 6.5rem 0;
   overflow: hidden;
 }
 
