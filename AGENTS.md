@@ -59,4 +59,4 @@ Este documento define la visión, el estilo visual y las reglas técnicas obliga
 ## 5. Metodología de Trabajo y Flujo de Entrega (Sprint 2 en adelante)
 - **Desarrollo Atómico por Funcionalidad:** Cada funcionalidad se desarrollará de forma aislada e independiente en su propia rama (`feature/<nombre-funcionalidad>`).
 - **Verificación y Push Inmediato:** Una vez completada la funcionalidad (código + tests unitarios/integración + lint + format), se fusiona en `main`, se sube inmediatamente al repositorio remoto de GitHub (`git push`) y se actualiza su tarjeta en Trello a "Hecho".
-- **Pausa Informativa Obligatoria:** Tras realizar el push a GitHub, la IA debe **DETENERSE**, explicar detalladamente al usuario todo lo realizado (archivos creados/modificados, tests pasados y cómo probarlo en el navegador), y **esperar la confirmación del usuario** antes de comenzar la siguiente funcionalidad.
+- **Avance Continuo Autónomo:** Tras subir cada funcionalidad y actualizar Trello, la IA continúa automáticamente con la siguiente funcionalidad pendiente sin detenerse a pedir confirmación intermedia.

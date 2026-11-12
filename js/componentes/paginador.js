@@ -8,7 +8,7 @@ import { extraerPaginaDeParametros, construirQueryConPagina } from '../logica/pa
 
 /**
  * Lee el número de página actual desde la barra de direcciones del navegador.
- * @param {Location | { search: string }} [ubicacion=window.location]
+ * @param {Location|Object} [ubicacion=window.location]
  * @returns {number}
  */
 export function leerPaginaUrl(ubicacion = window.location) {
@@ -18,8 +18,8 @@ export function leerPaginaUrl(ubicacion = window.location) {
 /**
  * Sincroniza el parámetro `?pagina=X` en la URL sin recargar la página mediante `history.replaceState`.
  * @param {number} pagina Número de página actual.
- * @param {History | { replaceState: (data: unknown, unused: string, url?: string | URL | null) => void }} [historial=window.history]
- * @param {Location | { pathname: string, search: string, hash?: string }} [ubicacion=window.location]
+ * @param {History|Object} [historial=window.history]
+ * @param {Location|Object} [ubicacion=window.location]
  */
 export function sincronizarPaginaUrl(
   pagina,
@@ -48,9 +48,9 @@ export function sincronizarPaginaUrl(
 
 /**
  * Renderiza los controles de paginación (Anterior, números de página y Siguiente) con `aria-current="page"`.
- * @param {HTMLElement | null} contenedor Elemento `<nav>` o contenedor donde insertar los botones.
- * @param {import('../logica/paginacion.js').ResultadoPaginacion<unknown>} estadoPaginacion Resultado devuelto por `paginar()`.
- * @param {(nuevaPagina: number) => void} alCambiarPagina Callback invocado cuando el usuario pulsa una página.
+ * @param {HTMLElement|null} contenedor Elemento `<nav>` o contenedor donde insertar los botones.
+ * @param {Object} estadoPaginacion Resultado devuelto por `paginar()`.
+ * @param {Function} alCambiarPagina Callback invocado cuando el usuario pulsa una página.
  */
 export function renderizarControlesPaginacion(contenedor, estadoPaginacion, alCambiarPagina) {
   if (!contenedor) {

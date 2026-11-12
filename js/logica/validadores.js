@@ -45,6 +45,12 @@ export const LETRAS_DNI = 'TRWAGMYFPDXBNJZSQVHLCKE';
 export const REGEX_LICENCIA = /^[A-Za-z0-9-]{4,20}$/;
 
 /**
+ * @typedef {Object} ResultadoValidacion
+ * @property {boolean} valido - Indica si el valor supera la validación.
+ * @property {string} [motivo] - Explicación legible en caso de error.
+ */
+
+/**
  * Evalúa los cuatro requisitos obligatorios de la contraseña (Requisito 5).
  * @param {string} clave
  * @returns {{ longitud: boolean, minuscula: boolean, mayuscula: boolean, cifra: boolean, esValida: boolean }}
@@ -69,8 +75,8 @@ export function evaluarRequisitosClave(clave) {
 /**
  * Valida un nombre de usuario comprobando formato y disponibilidad.
  * @param {string} usuario
- * @param {(u: string) => boolean} [comprobarExiste] Función opcional para comprobar si ya existe.
- * @returns {{ valido: boolean, motivo?: string }}
+ * @param {Function} [comprobarExiste] Función opcional para comprobar si ya existe.
+ * @returns {ResultadoValidacion}
  */
 export function validarNombreUsuario(usuario, comprobarExiste = () => false) {
   if (!usuario || typeof usuario !== 'string' || usuario.trim() === '') {
@@ -95,7 +101,7 @@ export function validarNombreUsuario(usuario, comprobarExiste = () => false) {
 /**
  * Valida una dirección de correo electrónico.
  * @param {string} correo
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarCorreo(correo) {
   if (!correo || typeof correo !== 'string' || correo.trim() === '') {
@@ -115,7 +121,7 @@ export function validarCorreo(correo) {
  * Valida la coincidencia entre la contraseña y su repetición.
  * @param {string} clave
  * @param {string} claveRepetida
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarRepeticionClave(clave, claveRepetida) {
   if (!claveRepetida) {
@@ -130,7 +136,7 @@ export function validarRepeticionClave(clave, claveRepetida) {
 /**
  * Valida el nombre completo de un socio ciclista.
  * @param {string} nombre
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarNombreSocio(nombre) {
   const limpio = String(nombre || '').trim();
@@ -149,8 +155,8 @@ export function validarNombreSocio(nombre) {
 /**
  * Valida un DNI español comprobando formato Regex, letra de control (módulo 23) y duplicados.
  * @param {string} dni
- * @param {(dniNormalizado: string) => boolean} [comprobarDuplicado]
- * @returns {{ valido: boolean, motivo?: string }}
+ * @param {Function} [comprobarDuplicado]
+ * @returns {ResultadoValidacion}
  * @example
  * validarDni('12345678Z'); // { valido: true }
  */
@@ -192,7 +198,7 @@ export function validarDni(dni, comprobarDuplicado = () => false) {
 /**
  * Valida la fecha de nacimiento de un socio ciclista (formato YYYY-MM-DD y fecha pasada coherente).
  * @param {string} fechaIso
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarFechaNacimiento(fechaIso) {
   const limpio = String(fechaIso || '').trim();
@@ -233,7 +239,7 @@ export function validarFechaNacimiento(fechaIso) {
 /**
  * Valida la cuota mensual del socio ciclista (entre 10 y 500 €).
  * @param {number | string} cuota
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarCuotaMensual(cuota) {
   const texto = String(cuota ?? '').trim();
@@ -254,7 +260,7 @@ export function validarCuotaMensual(cuota) {
  * Valida el código de licencia federativa cuando la casilla ¿Federado? está activa.
  * @param {string} licencia
  * @param {boolean} esFederado
- * @returns {{ valido: boolean, motivo?: string }}
+ * @returns {ResultadoValidacion}
  */
 export function validarLicenciaFederativa(licencia, esFederado) {
   if (!esFederado) {
@@ -279,8 +285,8 @@ export function validarLicenciaFederativa(licencia, esFederado) {
 /**
  * Valida la marca o el modelo de una bicicleta dentro del grupo dinámico.
  * @param {string} valor
- * @param {'marca' | 'modelo'} tipoCampo
- * @returns {{ valido: boolean, motivo?: string }}
+ * @param {string} [tipoCampo='marca']
+ * @returns {ResultadoValidacion}
  */
 export function validarCampoBicicleta(valor, tipoCampo = 'marca') {
   const limpio = String(valor || '').trim();

@@ -61,7 +61,7 @@ export function generarIdSocio() {
 
 /**
  * Normaliza y limita la colección de bicicletas asociadas a un socio (máximo 3).
- * @param { unknown } listaBicicletas
+ * @param {Array<Object>|*} listaBicicletas
  * @returns {Bicicleta[]}
  */
 export function normalizarBicicletas(listaBicicletas) {
@@ -84,7 +84,7 @@ export function normalizarBicicletas(listaBicicletas) {
  * Obtiene todos los socios ciclistas pertenecientes a un usuario.
  * Si el almacenamiento contiene JSON corrupto o una estructura no válida, devuelve `[]`.
  * @param {string} usuario Nombre de usuario activo.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=localStorage]
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {SocioCiclista[]}
  */
 export function obtenerSocios(usuario, almacen = localStorage) {
@@ -108,8 +108,8 @@ export function obtenerSocios(usuario, almacen = localStorage) {
  * Busca un socio ciclista por su identificador único.
  * @param {string} usuario Nombre de usuario activo.
  * @param {string} id Identificador del socio.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=localStorage]
- * @returns {SocioCiclista | null}
+ * @param {Storage|Object} [almacen=localStorage]
+ * @returns {SocioCiclista|null}
  */
 export function obtenerSocioPorId(usuario, id, almacen = localStorage) {
   if (!id || typeof id !== 'string') {
@@ -122,9 +122,9 @@ export function obtenerSocioPorId(usuario, id, almacen = localStorage) {
 /**
  * Crea y persiste un nuevo socio ciclista bajo la clave del usuario indicado.
  * @param {string} usuario Nombre de usuario propietario.
- * @param {Partial<SocioCiclista>} datos Campos del socio ciclista.
- * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
- * @param {() => string} [funcionId=generarIdSocio]
+ * @param {Object} datos Campos del socio ciclista.
+ * @param {Storage|Object} [almacen=localStorage]
+ * @param {Function} [funcionId=generarIdSocio]
  * @returns {SocioCiclista} El socio creado y normalizado.
  */
 export function crearSocio(usuario, datos, almacen = localStorage, funcionId = generarIdSocio) {
@@ -180,8 +180,8 @@ export function crearSocio(usuario, datos, almacen = localStorage, funcionId = g
  * Actualiza los datos de un socio ciclista existente.
  * @param {string} usuario Nombre de usuario propietario.
  * @param {string} id Identificador del socio a modificar.
- * @param {Partial<SocioCiclista>} cambios Nuevos datos del socio.
- * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
+ * @param {Object} cambios Nuevos datos del socio.
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {SocioCiclista} El socio actualizado.
  */
 export function actualizarSocio(usuario, id, cambios, almacen = localStorage) {
@@ -252,7 +252,7 @@ export function actualizarSocio(usuario, id, cambios, almacen = localStorage) {
  * Elimina un socio ciclista por su identificador.
  * @param {string} usuario Nombre de usuario propietario.
  * @param {string} id Identificador del socio a borrar.
- * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {boolean} `true` si se eliminó el registro, `false` si no existía.
  */
 export function eliminarSocio(usuario, id, almacen = localStorage) {

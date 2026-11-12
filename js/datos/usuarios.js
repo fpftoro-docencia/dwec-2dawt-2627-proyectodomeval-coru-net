@@ -21,7 +21,7 @@ export const CLAVE_USUARIOS = 'club_usuarios';
 
 /**
  * Obtiene la lista completa de usuarios registrados.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=localStorage]
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {Usuario[]}
  */
 export function obtenerUsuarios(almacen = localStorage) {
@@ -32,7 +32,7 @@ export function obtenerUsuarios(almacen = localStorage) {
 /**
  * Comprueba si un nombre de usuario ya está registrado (no sensible a mayúsculas).
  * @param {string} nombreUsuario
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=localStorage]
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {boolean}
  */
 export function existeUsuario(nombreUsuario, almacen = localStorage) {
@@ -48,8 +48,8 @@ export function existeUsuario(nombreUsuario, almacen = localStorage) {
  * @param {string} datos.usuario
  * @param {string} datos.correo
  * @param {string} datos.clave
- * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
- * @param {typeof resumirClave} [funcionHash=resumirClave]
+ * @param {Storage|Object} [almacen=localStorage]
+ * @param {Function} [funcionHash=resumirClave]
  * @returns {Promise<Usuario>} El usuario creado.
  */
 export async function registrarUsuario(
@@ -87,9 +87,9 @@ export async function registrarUsuario(
  * Comprueba las credenciales de acceso de un usuario.
  * @param {string} identificador Nombre de usuario o correo.
  * @param {string} clave Contraseña en texto plano a verificar.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=localStorage]
- * @param {typeof resumirClave} [funcionHash=resumirClave]
- * @returns {Promise<Usuario | null>} El usuario si las credenciales coinciden, o null si fallan.
+ * @param {Storage|Object} [almacen=localStorage]
+ * @param {Function} [funcionHash=resumirClave]
+ * @returns {Promise<Usuario|null>} El usuario si las credenciales coinciden, o null si fallan.
  */
 export async function autenticarUsuario(
   identificador,
@@ -120,9 +120,9 @@ export async function autenticarUsuario(
  * Cambia el rol de un usuario registrado ('administrador' <-> 'usuario').
  * Impide que el administrador activo se quite su propio rol (Requisito 20).
  * @param {string} nombreUsuario Usuario objetivo cuyo rol se desea modificar.
- * @param {'administrador' | 'usuario'} nuevoRol Nuevo rol a asignar.
+ * @param {string} nuevoRol Nuevo rol a asignar ('administrador' o 'usuario').
  * @param {string} [usuarioSolicitante=''] Nombre del administrador con sesión activa.
- * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
+ * @param {Storage|Object} [almacen=localStorage]
  * @returns {Usuario} El usuario actualizado.
  */
 export function cambiarRolUsuario(

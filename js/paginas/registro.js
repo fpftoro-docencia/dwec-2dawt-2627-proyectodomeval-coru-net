@@ -43,7 +43,7 @@ function marcarEstadoValidacion(campo, cajaError, esValido, mensajeError = '') {
 /**
  * Inicializa la página de registro.
  * @param {Location} [navegacion=window.location]
- * @param {typeof registrarUsuario} [funcionRegistrar=registrarUsuario]
+ * @param {Function} [funcionRegistrar=registrarUsuario]
  */
 export function inicializarPaginaRegistro(
   navegacion = window.location,

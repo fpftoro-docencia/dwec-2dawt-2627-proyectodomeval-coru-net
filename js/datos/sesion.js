@@ -16,8 +16,8 @@ export const CLAVE_SESION = 'club_sesion_activa';
 
 /**
  * Obtiene la sesión activa en el navegador.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=sessionStorage]
- * @returns {Sesion | null}
+ * @param {Storage|Object} [almacen=sessionStorage]
+ * @returns {Sesion|null}
  */
 export function obtenerSesion(almacen = sessionStorage) {
   return leerJSON(almacen, CLAVE_SESION, null);
@@ -27,8 +27,8 @@ export function obtenerSesion(almacen = sessionStorage) {
  * Guarda los datos de inicio de sesión.
  * @param {Object} usuario
  * @param {string} usuario.usuario
- * @param {'administrador' | 'usuario'} usuario.rol
- * @param {Storage | { setItem: (k: string, v: string) => void }} [almacen=sessionStorage]
+ * @param {string} usuario.rol
+ * @param {Storage|Object} [almacen=sessionStorage]
  * @returns {Sesion}
  */
 export function iniciarSesion({ usuario, rol }, almacen = sessionStorage) {
@@ -44,7 +44,7 @@ export function iniciarSesion({ usuario, rol }, almacen = sessionStorage) {
 
 /**
  * Cierra la sesión activa borrándola del almacén.
- * @param {Storage | { removeItem: (k: string) => void }} [almacen=sessionStorage]
+ * @param {Storage|Object} [almacen=sessionStorage]
  */
 export function cerrarSesion(almacen = sessionStorage) {
   borrarItem(almacen, CLAVE_SESION);
@@ -52,7 +52,7 @@ export function cerrarSesion(almacen = sessionStorage) {
 
 /**
  * Comprueba si hay una sesión activa con rol administrador.
- * @param {Storage | { getItem: (k: string) => string | null }} [almacen=sessionStorage]
+ * @param {Storage|Object} [almacen=sessionStorage]
  * @returns {boolean}
  */
 export function esAdministrador(almacen = sessionStorage) {
@@ -63,9 +63,9 @@ export function esAdministrador(almacen = sessionStorage) {
 /**
  * Guard para páginas privadas (listado.html, ficha.html, usuarios.html).
  * Si no hay sesión, redirige inmediatamente a index.html usando location.replace (Requisito 7).
- * @param {Location} [navegacion=window.location]
- * @param {Storage} [almacen=sessionStorage]
- * @returns {Sesion | null} La sesión activa si existe.
+ * @param {Location|Object} [navegacion=window.location]
+ * @param {Storage|Object} [almacen=sessionStorage]
+ * @returns {Sesion|null} La sesión activa si existe.
  */
 export function protegerPaginaPrivada(navegacion = window.location, almacen = sessionStorage) {
   const sesion = obtenerSesion(almacen);
@@ -79,10 +79,10 @@ export function protegerPaginaPrivada(navegacion = window.location, almacen = se
 /**
  * Guard para la página de administración (usuarios.html).
  * Si no es administrador, redirige a listado.html (Requisito 7).
- * @param {Location} [navegacion=window.location]
- * @param {Storage} [almacen=sessionStorage]
- * @param {(msg: string, tipo: string) => void} [notificar]
- * @returns {Sesion | null}
+ * @param {Location|Object} [navegacion=window.location]
+ * @param {Storage|Object} [almacen=sessionStorage]
+ * @param {Function|null} [notificar=null]
+ * @returns {Sesion|null}
  */
 export function protegerPaginaAdmin(
   navegacion = window.location,

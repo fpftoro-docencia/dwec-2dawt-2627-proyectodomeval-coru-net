@@ -38,3 +38,53 @@ Diario de aprendizaje del proyecto DOM para DWEC (2º DAWT, 2026/2027).
   }));
   ```
   Al activar `bubbles: true`, el evento asciende por el árbol del DOM hasta llegar a `document`, donde un único oyente centralizado lo recibe y genera la alerta accesible con `role="status"`.
+
+---
+
+## 12/11/2026 · Sprint 2 · CRUD de Socios Ciclistas, plantillas `<template>`, paginación y pruebas E2E
+
+### Dificultades y cómo las resolví
+
+- **Comportamiento de `<template>` al inyectar el `<body>` en Happy-DOM (`cargarPagina`):**  
+  Al ejecutar los primeros tests de integración con `cargarPagina('listado.html')`, observé que cuando una etiqueta `<template>` contenía directamente elementos `<tr>` y `<td>` fuera de una tabla y se volcaba mediante `document.body.innerHTML`, el analizador de fragmentos HTML descartaba las etiquetas `<tr>`. Además, tener `<script type="module">` dentro del `<body>` hacía que Happy-DOM intentase cargar el archivo JS externo y lanzara un `NotSupportedError`. Lo solucioné moviendo los `<script type="module">` al `<head>` (ya que los módulos ES se difieren de forma nativa) y estructurando las filas del `<template>` con elementos semánticos `<article class="fila-socio">`, logrando compatibilidad total tanto en navegadores reales como en Happy-DOM.
+
+- **IDs únicos y asociación accesible en el grupo dinámico de bicicletas:**  
+  Al clonar hasta 3 bloques desde `<template id="plantilla-bicicleta">`, si los campos compartían el mismo `id`, los `<label>` apuntaban siempre a la primera bicicleta y `FormData` sobrescribía los valores. Lo resolví llevando un contador incremental por inserción (`bici-marca-${sufijo}`, `bici-modelo-${sufijo}`) que enlaza dinámicamente `label.setAttribute('for', id)`, `input.id`, `input.name` y `input.setAttribute('aria-describedby', idError)`.
+
+- **Modo estricto de selectores en Playwright (`strict mode violation`):**  
+  En el recorrido E2E del CRUD (`e2e/crud.spec.js`), al dar de alta a «Alejandro Valverde» y comprobar en el listado `page.getByText('Alejandro Valverde')`, Playwright falló indicando que coincidía con dos nodos: la alerta superior de confirmación y la celda del listado. Lo corregí utilizando `page.getByText('Alejandro Valverde', { exact: true })` para apuntar inequívocamente a la celda con el nombre exacto del socio.
+
+### Problemas conceptuales
+
+- **Diferencia entre fase de captura (`blur`) y fase de burbuja (`input`) en la validación de formularios:**  
+  El evento `blur` (cuando el usuario sale de un campo) **no burbujea** (`bubbles: false`), mientras que `input` sí lo hace. Para evitar registrar decenas de oyentes individuales en cada input (especialmente cuando se añaden bicicletas dinámicamente), delegué ambos eventos en el elemento `<form>`:
+  ```javascript
+  // `blur` no sube en burbuja: lo interceptamos en el formulario durante la fase de captura (tercer argumento `true`)
+  formulario.addEventListener('blur', (evento) => {
+    camposTocados.add(evento.target);
+    validarElementoIndividual(evento.target);
+  }, true);
+
+  // `input` sí sube en burbuja: solo revalidamos si el campo ya fue visitado antes
+  formulario.addEventListener('input', (evento) => {
+    if (camposTocados.has(evento.target)) {
+      validarElementoIndividual(evento.target);
+    }
+  });
+  ```
+
+- **Por qué combinar `hidden` y `disabled` en los campos condicionales:**  
+  Ocultar visualmente el contenedor de la licencia federativa con `hidden = true` impide que el usuario lo vea, pero si el `<input>` interno no tiene además `disabled = true`, el navegador seguiría incluyéndolo en `new FormData(formulario)` y en las validaciones de envío. Al sincronizar ambos atributos (`contenedor.hidden = !activo` y `campo.disabled = !activo`), cuando el socio no está federado el control queda completamente excluido de los datos enviados.
+
+- **Búsqueda insensible a tildes con normalización Unicode `NFD` y `debounce`:**  
+  Para que al buscar `alvaro` o `master` aparezcan «Álvaro» y «Máster 30», descompuse los caracteres acentuados en su letra base + marca diacrítica con `.normalize('NFD')` y eliminé el rango Unicode de diacríticos `[\u0300-\u036f]`:
+  ```javascript
+  export function normalizarTextoBusqueda(texto) {
+    return String(texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+  ```
+  Combinado con un `debounce` de 250 ms probado con `vi.useFakeTimers()` y `vi.advanceTimersByTime()`, evitamos recalcular y repintar el DOM en cada pulsación rápida de teclado.

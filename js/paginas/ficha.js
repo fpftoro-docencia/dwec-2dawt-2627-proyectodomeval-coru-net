@@ -34,7 +34,7 @@ import {
  * Aplica o limpia el estado visual y accesible de error sobre un campo de formulario.
  * @param {HTMLElement | null} campo
  * @param {HTMLElement | null} cajaError
- * @param {{ valido: boolean, motivo?: string }} resultado
+ * @param {Object} resultado
  * @returns {boolean} `true` si el campo es válido.
  */
 function aplicarEstadoCampo(campo, cajaError, resultado) {
@@ -189,7 +189,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
 
   /**
    * Clona el `<template id="plantilla-bicicleta">`, asigna IDs y `for` únicos e inserta el bloque.
-   * @param {Partial<import('../datos/socios.js').Bicicleta>} [datosIniciales]
+   * @param {Object} [datosIniciales]
    */
   function anadirBloqueBicicleta(datosIniciales = {}) {
     if (!contenedorBicicletas || !plantillaBicicleta) {
@@ -457,7 +457,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
     const datosForm = new FormData(formulario);
     const esFederado = datosForm.has('federado');
 
-    /** @type {import('../datos/socios.js').Bicicleta[]} */
+    /** @type {Array<Object>} */
     const bicicletasExtraidas = [];
     const bloquesBici = contenedorBicicletas?.querySelectorAll('.bloque-bicicleta') || [];
 
@@ -487,9 +487,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
         .trim()
         .toUpperCase(),
       fechaNacimiento: String(datosForm.get('fechaNacimiento') || '').trim(),
-      categoria: /** @type {import('../datos/socios.js').SocioCiclista['categoria']} */ (
-        String(datosForm.get('categoria') || 'Cicloturista')
-      ),
+      categoria: String(datosForm.get('categoria') || 'Cicloturista'),
       cuota: Number(datosForm.get('cuota')),
       federado: esFederado,
       licencia: esFederado ? String(datosForm.get('licencia') || '').trim() : '',

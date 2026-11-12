@@ -130,7 +130,7 @@ function cerrarDialogoModal(dialogo) {
 
 /**
  * Formatea el resumen de bicicletas de un socio para mostrarlo como texto plano.
- * @param {import('../datos/socios.js').Bicicleta[]} bicicletas
+ * @param {Array<Object>} bicicletas
  * @returns {string}
  */
 function formatearResumenBicicletas(bicicletas) {
@@ -179,14 +179,14 @@ export function inicializarPaginaListado(navegacion = window.location) {
 
   let paginaSolicitada = leerPaginaUrl(navegacion);
   let terminoBusqueda = '';
-  /** @type {ReturnType<typeof setTimeout> | null} */
+  /** @type {number | null} */
   let temporizadorDebounce = null;
-  /** @type {import('../datos/socios.js').SocioCiclista | null} */
+  /** @type {Object | null} */
   let socioPendienteBorrado = null;
 
   /**
-   * Construye una fila `<tr>` a partir del `<template>` usando únicamente `textContent`.
-   * @param {import('../datos/socios.js').SocioCiclista} socio
+   * Construye una fila a partir del `<template>` usando únicamente `textContent`.
+   * @param {Object} socio
    * @returns {DocumentFragment | null}
    */
   function crearFilaDesdePlantilla(socio) {
