@@ -1,5 +1,7 @@
 /**
  * @fileoverview Controlador para la página de inicio de sesión (index.html).
+ * Incluye validación accesible en tiempo real (blur en captura e input en burbuja) y
+ * botón de alternancia de visibilidad de contraseña.
  * @module paginas/index
  */
 
@@ -14,9 +16,12 @@ import {
 /**
  * Inicializa la página de inicio de sesión.
  * @param {Location} [navegacion=window.location]
+ * @param {typeof autenticarUsuario} [funcionAutenticar=autenticarUsuario]
  */
-export function inicializarPaginaLogin(navegacion = window.location) {
-  // Si ya hay sesión activa, redirige inmediatamente al listado (Requisito 6)
+export function inicializarPaginaLogin(
+  navegacion = window.location,
+  funcionAutenticar = autenticarUsuario,
+) {
   if (obtenerSesion()) {
     navegacion.replace('listado.html');
     return;
@@ -25,10 +30,18 @@ export function inicializarPaginaLogin(navegacion = window.location) {
   iniciarOyenteAvisos();
   comprobarAvisoPendiente();
 
-  const formulario = document.getElementById('formulario-login');
-  const campoUsuario = document.getElementById('campo-usuario');
-  const campoClave = document.getElementById('campo-clave');
-  const botonEntrar = document.getElementById('boton-entrar');
+  const formulario = /** @type {HTMLFormElement | null} */ (
+    document.getElementById('formulario-login')
+  );
+  const campoUsuario = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-usuario')
+  );
+  const campoClave = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-clave')
+  );
+  const botonEntrar = /** @type {HTMLButtonElement | null} */ (
+    document.getElementById('boton-entrar')
+  );
   const botonToggleClave = document.getElementById('boton-toggle-clave');
 
   if (botonToggleClave && campoClave) {
@@ -52,39 +65,69 @@ export function inicializarPaginaLogin(navegacion = window.location) {
     return;
   }
 
+  /** @type {WeakSet<HTMLElement>} */
+  const camposTocados = new WeakSet();
+
+  /**
+   * Valida un campo requerido del login y aplica `aria-invalid` e `is-invalid`.
+   * @param {HTMLElement} elemento
+   * @returns {boolean}
+   */
+  function validarCampoLogin(elemento) {
+    if (elemento === campoUsuario) {
+      const valido = campoUsuario.value.trim() !== '';
+      campoUsuario.classList.toggle('is-invalid', !valido);
+      campoUsuario.setAttribute('aria-invalid', String(!valido));
+      return valido;
+    }
+    if (elemento === campoClave) {
+      const valido = campoClave.value !== '';
+      campoClave.classList.toggle('is-invalid', !valido);
+      campoClave.setAttribute('aria-invalid', String(!valido));
+      return valido;
+    }
+    return true;
+  }
+
+  formulario.addEventListener(
+    'blur',
+    (evento) => {
+      const objetivo = /** @type {HTMLElement | null} */ (evento.target);
+      if (objetivo && objetivo.tagName === 'INPUT') {
+        camposTocados.add(objetivo);
+        validarCampoLogin(objetivo);
+      }
+    },
+    true,
+  );
+
+  formulario.addEventListener('input', (evento) => {
+    const objetivo = /** @type {HTMLElement | null} */ (evento.target);
+    if (objetivo && camposTocados.has(objetivo)) {
+      validarCampoLogin(objetivo);
+    }
+  });
+
   let enviando = false;
 
   formulario.addEventListener('submit', async (evento) => {
     evento.preventDefault();
 
-    // Evitar doble envío si ya está procesando (Requisito 6)
     if (enviando) {
       return;
     }
 
-    const usuarioValor = campoUsuario.value.trim();
-    const claveValor = campoClave.value;
+    camposTocados.add(campoUsuario);
+    camposTocados.add(campoClave);
 
-    let errores = false;
+    const usuarioValido = validarCampoLogin(campoUsuario);
+    const claveValida = validarCampoLogin(campoClave);
 
-    // Validación básica de campos requeridos
-    if (!usuarioValor) {
-      campoUsuario.classList.add('is-invalid');
-      errores = true;
-    } else {
-      campoUsuario.classList.remove('is-invalid');
-    }
-
-    if (!claveValor) {
-      campoClave.classList.add('is-invalid');
-      errores = true;
-    } else {
-      campoClave.classList.remove('is-invalid');
-    }
-
-    if (errores) {
+    if (!usuarioValido || !claveValida) {
       lanzarAviso(document, 'Por favor, rellena todos los campos requeridos.', 'warning');
-      const primerError = formulario.querySelector('.is-invalid');
+      const primerError = /** @type {HTMLElement | null} */ (
+        formulario.querySelector('.is-invalid')
+      );
       if (primerError) {
         primerError.focus();
       }
@@ -96,18 +139,20 @@ export function inicializarPaginaLogin(navegacion = window.location) {
       botonEntrar.disabled = true;
       botonEntrar.textContent = 'Verificando credenciales...';
 
-      // Autenticar comparando el hash SHA-256
-      const usuarioAutenticado = await autenticarUsuario(usuarioValor, claveValor);
+      const usuarioAutenticado = await funcionAutenticar(
+        campoUsuario.value.trim(),
+        campoClave.value,
+      );
 
       if (!usuarioAutenticado) {
         lanzarAviso(document, 'Nombre de usuario o contraseña incorrectos.', 'danger');
         campoClave.value = '';
         campoClave.classList.add('is-invalid');
+        campoClave.setAttribute('aria-invalid', 'true');
         campoClave.focus();
         return;
       }
 
-      // Iniciar sesión y navegar al listado
       iniciarSesion({
         usuario: usuarioAutenticado.usuario,
         rol: usuarioAutenticado.rol,
@@ -126,13 +171,8 @@ export function inicializarPaginaLogin(navegacion = window.location) {
       botonEntrar.textContent = 'Entrar al Club';
     }
   });
-
-  // Limpiar estilos de error al teclear
-  campoUsuario.addEventListener('input', () => campoUsuario.classList.remove('is-invalid'));
-  campoClave.addEventListener('input', () => campoClave.classList.remove('is-invalid'));
 }
 
-// Ejecutar si estamos en el navegador
 if (typeof window !== 'undefined' && document.getElementById('formulario-login')) {
   inicializarPaginaLogin();
 }
