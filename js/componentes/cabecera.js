@@ -1,5 +1,6 @@
 /**
- * @fileoverview Cabecera compartida para páginas privadas (Requisito 2).
+ * @fileoverview Cabecera compartida para páginas privadas (Requisito 2 y 7).
+ * Requiere en el HTML un elemento `<header class="main-header">`.
  * Cero JavaScript de Bootstrap: el menú y el cierre de sesión los controla nuestro código.
  * @module componentes/cabecera
  */
@@ -7,10 +8,11 @@
 import { obtenerSesion, cerrarSesion } from '../datos/sesion.js';
 
 /**
- * Renderiza la cabecera privada con el menú adaptado al rol del usuario.
+ * Renderiza la cabecera privada con el menú adaptado al rol del usuario y registra el oyente de cierre de sesión.
  * @param {string} paginaActiva Nombre del archivo actual (ej. 'listado.html').
- * @param {HTMLElement} [contenedorCabecera] Elemento donde insertar la cabecera (busca <header> si se omite).
+ * @param {HTMLElement} [contenedorCabecera] Elemento donde insertar la cabecera (busca `.main-header` si se omite).
  * @param {Location} [navegacion=window.location]
+ * @listens HTMLElement#click
  */
 export function inicializarCabecera(
   paginaActiva,

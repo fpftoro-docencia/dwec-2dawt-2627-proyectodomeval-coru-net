@@ -1,6 +1,8 @@
 /**
- * @fileoverview Controlador para la página de inicio de sesión (index.html).
- * Incluye validación accesible en tiempo real (blur en captura e input en burbuja) y
+ * @fileoverview Controlador para la página de inicio de sesión (`index.html`).
+ * HTML requerido: `#formulario-login`, `#campo-usuario`, `#campo-clave`, `#boton-entrar`,
+ * `#boton-toggle-clave` y `#contenedor-avisos`.
+ * Incluye validación accesible en tiempo real (`blur` en captura e `input` en burbuja) y
  * botón de alternancia de visibilidad de contraseña.
  * @module paginas/index
  */
@@ -17,6 +19,10 @@ import {
  * Inicializa la página de inicio de sesión.
  * @param {Location} [navegacion=window.location]
  * @param {Function} [funcionAutenticar=autenticarUsuario]
+ * @fires CustomEvent#aviso
+ * @listens HTMLFormElement#blur
+ * @listens HTMLFormElement#input
+ * @listens HTMLFormElement#submit
  */
 export function inicializarPaginaLogin(
   navegacion = window.location,

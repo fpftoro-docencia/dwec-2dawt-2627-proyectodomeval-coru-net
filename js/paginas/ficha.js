@@ -1,8 +1,11 @@
 /**
- * @fileoverview Controlador para la página privada de alta y edición de socio (ficha.html).
- * Implementa campo condicional (licencia federativa con hidden + disabled), grupo dinámico de
- * bicicletas (0 a 3 mediante <template> con IDs y labels únicos), lectura con FormData y
- * validación accesible en tiempo real (blur en captura, input en burbuja).
+ * @fileoverview Controlador para la página privada de alta y edición de socio (`ficha.html`).
+ * HTML requerido: `#formulario-ficha`, `#campo-nombre`, `#campo-dni`, `#campo-fecha-nacimiento`,
+ * `#campo-categoria`, `#campo-cuota`, `#campo-federado`, `#contenedor-licencia`, `#campo-licencia`,
+ * `#boton-anadir-bici`, `#contenedor-bicicletas` y `#plantilla-bicicleta`.
+ * Implementa campo condicional (licencia federativa con `hidden` + `disabled`), grupo dinámico de
+ * bicicletas (0 a 3 mediante `<template>` con IDs y labels únicos), lectura con `FormData` y
+ * validación accesible en tiempo real (`blur` en captura, `input` en burbuja).
  * @module paginas/ficha
  */
 
@@ -61,6 +64,10 @@ function aplicarEstadoCampo(campo, cajaError, resultado) {
 /**
  * Inicializa la página de ficha de socio ciclista (modo alta o edición según `?id=...`).
  * @param {Location} [navegacion=window.location]
+ * @fires CustomEvent#aviso
+ * @listens HTMLFormElement#blur
+ * @listens HTMLFormElement#input
+ * @listens HTMLFormElement#submit
  */
 export function inicializarPaginaFicha(navegacion = window.location) {
   const sesion = protegerPaginaPrivada(navegacion);

@@ -51,6 +51,7 @@ export function sincronizarPaginaUrl(
  * @param {HTMLElement|null} contenedor Elemento `<nav>` o contenedor donde insertar los botones.
  * @param {Object} estadoPaginacion Resultado devuelto por `paginar()`.
  * @param {Function} alCambiarPagina Callback invocado cuando el usuario pulsa una página.
+ * @listens HTMLElement#click
  */
 export function renderizarControlesPaginacion(contenedor, estadoPaginacion, alCambiarPagina) {
   if (!contenedor) {

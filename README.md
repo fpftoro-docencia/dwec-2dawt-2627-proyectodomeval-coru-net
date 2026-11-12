@@ -158,6 +158,7 @@ flowchart TD
 | Integración | `tests/integracion/usuarios.test.js` | Protección de rol administrador, bloqueo del propio rol y cambio de permisos en `usuarios.html`. |
 | E2E (Playwright) | `e2e/sesion.spec.js` | Recorrido real en Chromium: guard sin sesión, registro de primer admin, cierre de sesión y login. |
 | E2E (Playwright) | `e2e/crud.spec.js` | Recorrido real en Chromium: alta con licencia y bicicleta, persistencia tras recargar, edición y baja en `<dialog>`. |
+| Humo (Playwright) | `e2e/humo.spec.js` | Prueba de humo de la aplicación pública: verifica respuesta HTTP 200, renderizado del acceso y navegación a inscripción. |
 
 ## Integración continua
 
@@ -168,9 +169,9 @@ Reglas añadidas a `eslint.config.js`:
 2. `curly: 'error'`: Exige el uso obligatorio de llaves `{}` en todas las estructuras de control (`if`, `else`, `for`, `while`).
 3. `no-console: ['warn', { allow: ['warn', 'error'] }]`: Advierte sobre cualquier `console.log` olvidado en el código.
 
-### El workflow
+### Los workflows de GitHub Actions
 
-`.github/workflows/ci.yml` se ejecuta con cada `push` y `pull_request` hacia la rama `main` e incluye control de concurrencia (`concurrency`) para cancelar ejecuciones obsoletas.
+1. **`.github/workflows/ci.yml`** (`push` y `pull_request` hacia `main`):
 
 | Trabajo | Espera a | Pasos | Artefacto |
 |---------|----------|-------|-----------|
@@ -178,9 +179,24 @@ Reglas añadidas a `eslint.config.js`:
 | `Tests` | `Calidad` | Checkout, Setup Node 24, `npm ci`, `npm run coverage` (umbral >= 90 %) | `coverage-report` (`coverage/`) |
 | `E2E` | `Tests` | Checkout, Setup Node 24, `npm ci`, instalar Chromium, `npm run e2e` | `playwright-report` (`playwright-report/` si falla) |
 
+2. **`.github/workflows/despliegue.yml`** (`deployment_status` emitido por Vercel):
+   - Ejecuta el trabajo `E2E desplegado` cuando `github.event.deployment_status.state == 'success'`, lanzando `npm run e2e` con `BASE_URL` apuntando a la URL real desplegada por Vercel.
+
+3. **`.github/workflows/release.yml`** (`push` de etiquetas `v*`):
+   - **Trabajo `Comprobar`:** Ejecuta `lint`, `format:check`, `coverage`, `docs` y `build`.
+   - **Trabajo `Humo`:** Ejecuta `npx playwright test e2e/humo.spec.js` contra la web desplegada (`BASE_URL`).
+   - **Trabajo `Release`:** Empaqueta `dist/` en un archivo `.zip` y publica la Release oficial en GitHub con `gh release create --generate-notes`.
+
 ## Despliegue continuo
 
-*(Se completará en el Sprint 3 con Vercel).*
+- **Configuración en Vercel:**
+  - **Framework Preset:** `Other`
+  - **Build Command:** `npm run build`
+  - **Output Directory:** `dist`
+  - **Deployment Checks:** Configurados con los cuatro trabajos de verificación (`Calidad`, `Tests`, `E2E` y `E2E desplegado`) para que Vercel solo promueva a producción los despliegues que superen todas las pruebas.
+- **Evidencias de despliegue y retención:**
+  - Comprobaciones en Pull Request y vista previa: `img/pr-comprobaciones.png`
+  - Versión retenida en Vercel cuando falla un check de bloqueo antes de promoción a producción: `img/vercel-retenido.png`
 
 ## Organización del trabajo
 
@@ -191,6 +207,7 @@ Para que una tarea se considere **Hecha** en el tablero de Trello, debe cumplir 
 - [x] Tiene pruebas unitarias y de integración asociadas que cubren casos nominales, casos límite y entradas corruptas o inválidas (`npm run coverage` >= 90 %).
 - [x] Todos los tests unitarios, de integración y E2E pasan en local (`npm test` y `npm run e2e`).
 - [x] Los componentes creados son accesibles (`role="status"`, `aria-describedby`, `aria-invalid`, `labels`).
+- [x] Documentación JSDoc actualizada y verificada con `npm run docs`.
 - [x] Se integra desde su rama dedicada hacia `main`.
 - [x] El pipeline de GitHub Actions (`ci.yml`) finaliza en verde.
 
@@ -200,7 +217,7 @@ Para que una tarea se considere **Hecha** en el tablero de Trello, debe cumplir 
 |--------|-------|-------------|-----------|
 | 1 | `v0.1` | Autenticación, sesión, roles, maquetación base estilo Specialized, tests unitarios y CI Paso 1. | La estructuración modular inicial ha facilitado enormemente probar el almacenamiento de usuarios sin depender del navegador real gracias a `AlmacenFalso`. La integración de `resumirClave` mediante promesas requirió especial cuidado en el control de envíos duplicados. |
 | 2 | `v0.2` | Entidad y CRUD de Socios, plantillas `<template>`, campo condicional, grupo dinámico (0 a 3 bicicletas), paginación sincronizada con URL, panel de administración, tests en Happy-DOM, E2E con Playwright y CI Paso 2 con cobertura >= 90 %. | Separar la lógica pura (`paginar`, `validarDni`, `normalizarTextoBusqueda`) de los controladores DOM nos permitió alcanzar un 99.28 % de cobertura de líneas de forma natural. El uso de `blur` en fase de captura combinado con `input` en burbuja ofrece una experiencia de validación muy fluida sin agobiar al usuario antes de que termine de escribir por primera vez. |
-| 3 | `v1.0` | Despliegue en Vercel, E2E desplegado, Release final y documentación. | *(Pendiente)* |
+| 3 | `v1.0` | Workflows de pruebas contra despliegues (`despliegue.yml`), prueba de humo (`e2e/humo.spec.js`), publicación automatizada de Release (`release.yml`) y documentación completa JSDoc (`npm run docs`). | Automatizar la validación posdespliegue mediante `deployment_status` y `BASE_URL` en Playwright cierra el ciclo entre integración continua y entrega en producción, asegurando que el artefacto estático compilado en `dist/` funciona exactamente igual que en el entorno de desarrollo. |
 
 **Tablero de Trello:** [Club Ciclista Pedal & Cadencia](https://trello.com/b/bP2c4qe1/club-ciclista-pedal-cadencia)
 

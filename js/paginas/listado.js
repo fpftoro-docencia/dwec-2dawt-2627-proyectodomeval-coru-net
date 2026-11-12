@@ -1,7 +1,10 @@
 /**
- * @fileoverview Controlador para la página privada de listado de socios (listado.html).
- * Genera filas mediante <template> y textContent, filtra con debounce ignorando tildes/mayúsculas,
- * pagina sincronizando ?pagina=X en la URL y confirma bajas mediante <dialog> nativo.
+ * @fileoverview Controlador para la página privada de listado de socios (`listado.html`).
+ * HTML requerido: `#cuerpo-listado`, `#plantilla-fila-socio`, `#contenedor-tabla`,
+ * `#estado-vacio`, `#campo-busqueda`, `#contador-resultados`, `#navegacion-paginacion`
+ * y `#dialogo-confirmar-borrado`.
+ * Genera filas mediante `<template>` y `textContent`, filtra con `debounce` ignorando tildes/mayúsculas,
+ * pagina sincronizando `?pagina=X` en la URL y confirma bajas mediante `<dialog>` nativo.
  * @module paginas/listado
  */
 
@@ -144,6 +147,9 @@ function formatearResumenBicicletas(bicicletas) {
 /**
  * Inicializa la página del listado de socios ciclistas.
  * @param {Location} [navegacion=window.location]
+ * @fires CustomEvent#aviso
+ * @listens HTMLInputElement#input
+ * @listens HTMLButtonElement#click
  */
 export function inicializarPaginaListado(navegacion = window.location) {
   const sesion = protegerPaginaPrivada(navegacion);

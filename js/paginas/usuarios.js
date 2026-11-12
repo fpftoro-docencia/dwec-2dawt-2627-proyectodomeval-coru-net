@@ -1,6 +1,8 @@
 /**
- * @fileoverview Controlador para la zona de administración de usuarios (usuarios.html).
- * Incluye protección estricta por rol, listado con <template> y textContent, buscador con debounce,
+ * @fileoverview Controlador para la zona de administración de usuarios (`usuarios.html`).
+ * HTML requerido: `#cuerpo-usuarios`, `#plantilla-fila-usuario`, `#contenedor-tabla-usuarios`,
+ * `#estado-vacio-usuarios`, `#campo-busqueda-usuarios`, `#contador-usuarios` y `#navegacion-paginacion-usuarios`.
+ * Incluye protección estricta por rol, listado con `<template>` y `textContent`, buscador con `debounce`,
  * paginación sincronizada con URL y cambio de rol impidiendo que el admin activo se degrade a sí mismo.
  * @module paginas/usuarios
  */
@@ -26,6 +28,9 @@ export const TIEMPO_DEBOUNCE_USUARIOS_MS = 250;
 /**
  * Inicializa la página de administración de usuarios.
  * @param {Location} [navegacion=window.location]
+ * @fires CustomEvent#aviso
+ * @listens HTMLInputElement#input
+ * @listens HTMLButtonElement#click
  */
 export function inicializarPaginaUsuarios(navegacion = window.location) {
   const sesion = protegerPaginaAdmin(navegacion, undefined, (mensaje, tipo) => {
