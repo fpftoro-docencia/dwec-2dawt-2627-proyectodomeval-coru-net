@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
     <!-- Hoja de estilos propia -->
     <link rel="stylesheet" href="css/estilos.css" />
+    <!-- Script modular de la página de listado -->
+    <script type="module" src="js/paginas/listado.js"></script>
   </head>
   <body>
     <!-- Cabecera privada con menú compartido y botón de cierre de sesión -->
@@ -24,6 +26,7 @@
           aria-live="polite"
         ></div>
 
+        <!-- Encabezado y acción principal -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
           <div>
             <h1 class="h2 fw-bold text-uppercase mb-1">Listado de Socios Ciclistas</h1>
@@ -31,30 +34,155 @@
               Gestión de fichas federativas y bicicletas registradas en el club
             </p>
           </div>
-          <div>
-            <a href="ficha.html" class="btn btn-danger fw-bold text-uppercase px-3">
+          <div class="d-flex gap-2">
+            <a
+              href="ficha.html"
+              id="enlace-nuevo-socio"
+              class="btn btn-danger fw-bold text-uppercase px-3"
+            >
               + Nuevo Socio
             </a>
           </div>
         </div>
 
-        <!-- Espacio reservado para el Sprint 2 (Buscador, tabla y paginación) -->
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-4 text-center py-5">
-            <div class="display-6 text-muted mb-3">🚴</div>
-            <h2 class="h5 fw-bold">Sprint 1 completado</h2>
-            <p class="text-muted max-w-500 mx-auto">
-              El sistema de autenticación, roles y sesión está activo. En el Sprint 2 se incorporará
-              el CRUD completo, buscador con debounce, modal de borrado accesible y paginación
-              sincronizada con la URL.
-            </p>
-            <a href="ficha.html" class="btn btn-outline-dark btn-sm fw-bold"
-              >Ver maqueta de la Ficha</a
-            >
+        <!-- Barra de herramientas: Buscador con debounce y Contador de resultados -->
+        <section class="card shadow-sm border-0 mb-4" aria-label="Herramientas de filtrado">
+          <div class="card-body p-3 p-md-4">
+            <div class="row g-3 align-items-center justify-content-between">
+              <div class="col-12 col-md-7 col-lg-6">
+                <label for="campo-busqueda" class="form-label small fw-bold text-uppercase mb-1">
+                  Buscar socio ciclista
+                </label>
+                <input
+                  type="search"
+                  id="campo-busqueda"
+                  class="form-control"
+                  placeholder="Filtra por nombre, DNI, categoría, licencia o bicicleta..."
+                  autocomplete="off"
+                />
+              </div>
+              <div class="col-12 col-md-5 col-lg-6 text-md-end">
+                <p
+                  id="contador-resultados"
+                  class="mb-0 fw-semibold text-secondary small"
+                  aria-live="polite"
+                >
+                  0 socios registrados
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <!-- Contenedor del listado y estado vacío -->
+        <section class="card shadow-sm border-0" aria-label="Registros de socios">
+          <div class="card-body p-0">
+            <!-- Listado estructurado de socios ciclistas -->
+            <div id="contenedor-tabla">
+              <div
+                class="bg-dark text-white text-uppercase small fw-bold px-4 py-3 d-none d-lg-block"
+              >
+                <div class="row align-items-center">
+                  <div class="col-lg-3">Socio / DNI</div>
+                  <div class="col-lg-2">Categoría</div>
+                  <div class="col-lg-2">Licencia Federativa</div>
+                  <div class="col-lg-1">Cuota</div>
+                  <div class="col-lg-2">Bicicletas</div>
+                  <div class="col-lg-2 text-end">Acciones</div>
+                </div>
+              </div>
+              <div id="cuerpo-listado" class="list-group list-group-flush"></div>
+            </div>
+
+            <!-- Mensaje cuando no hay registros o no hay coincidencias -->
+            <div id="estado-vacio" class="p-5 text-center" hidden>
+              <div class="display-6 text-muted mb-2" aria-hidden="true">🚴</div>
+              <h2 id="titulo-vacio" class="h5 fw-bold">No hay socios registrados todavía</h2>
+              <p id="mensaje-vacio" class="text-muted max-w-500 mx-auto mb-3">
+                Crea el primer socio ciclista del club o carga un conjunto de socios de demostración
+                para probar el buscador y la paginación.
+              </p>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="ficha.html" class="btn btn-dark btn-sm fw-bold text-uppercase px-3">
+                  Registrar primer socio
+                </a>
+                <button
+                  type="button"
+                  id="boton-cargar-ejemplos"
+                  class="btn btn-outline-secondary btn-sm fw-bold text-uppercase px-3"
+                >
+                  Cargar socios de ejemplo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie de tarjeta con controles de paginación -->
+          <div class="card-footer bg-white border-top py-3">
+            <nav id="navegacion-paginacion" aria-label="Paginación de socios ciclistas"></nav>
+          </div>
+        </section>
       </div>
     </main>
+
+    <!-- Plantilla obligatoria <template> para cada socio (Requisito 14) -->
+    <template id="plantilla-fila-socio">
+      <article class="list-group-item px-4 py-3 fila-socio">
+        <div class="row align-items-center gy-2">
+          <div class="col-12 col-lg-3">
+            <div class="fw-bold celda-nombre"></div>
+            <small class="text-muted celda-dni"></small>
+          </div>
+          <div class="col-6 col-lg-2">
+            <span class="badge bg-dark celda-categoria"></span>
+          </div>
+          <div class="col-6 col-lg-2">
+            <span class="badge celda-federado"></span>
+            <small class="d-block text-muted mt-1 celda-licencia"></small>
+          </div>
+          <div class="col-6 col-lg-1 fw-semibold celda-cuota"></div>
+          <div class="col-6 col-lg-2">
+            <span class="celda-bicicletas small text-secondary"></span>
+          </div>
+          <div class="col-12 col-lg-2 text-lg-end">
+            <div class="d-inline-flex gap-2">
+              <a class="btn btn-outline-dark btn-sm fw-bold enlace-editar" href="ficha.html">
+                Editar
+              </a>
+              <button type="button" class="btn btn-outline-danger btn-sm fw-bold boton-borrar">
+                Borrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <!-- Diálogo nativo <dialog> para confirmar el borrado (Requisito 14) -->
+    <dialog
+      id="dialogo-confirmar-borrado"
+      class="dialogo-club border-0 rounded-3 shadow-lg p-0"
+      aria-labelledby="titulo-dialogo-borrado"
+    >
+      <div class="p-4">
+        <h2 id="titulo-dialogo-borrado" class="h5 fw-bold text-uppercase mb-2">
+          Confirmar baja de socio
+        </h2>
+        <p id="mensaje-dialogo-borrado" class="text-secondary mb-4"></p>
+        <div class="d-flex justify-content-end gap-2">
+          <button
+            type="button"
+            id="boton-cancelar-borrado"
+            class="btn btn-outline-secondary fw-bold px-3"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="boton-confirmar-borrado" class="btn btn-danger fw-bold px-3">
+            Sí, eliminar socio
+          </button>
+        </div>
+      </div>
+    </dialog>
 
     <!-- Pie de página -->
     <footer class="site-footer">
@@ -63,8 +191,5 @@
         <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
       </div>
     </footer>
-
-    <!-- Script modular de la página de listado -->
-    <script type="module" src="js/paginas/listado.js"></script>
   </body>
 </html>
