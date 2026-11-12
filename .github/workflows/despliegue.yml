@@ -1,0 +1,46 @@
+name: Pruebas contra despliegue
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.deployment.sha || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  E2E-desplegado:
+    name: E2E desplegado
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio en el commit desplegado
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Instalar navegador Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar pruebas E2E contra la URL desplegada en Vercel
+        env:
+          BASE_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+        run: npm run e2e
+
+      - name: Subir informe de Playwright si falla contra el despliegue
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-despliegue
+          path: playwright-report/

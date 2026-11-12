@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   Calidad:
-    name: Comprobación de calidad y estilo
+    name: Calidad
     runs-on: ubuntu-latest
     steps:
       - name: Descargar el código del repositorio
@@ -37,7 +37,7 @@ jobs:
         run: npm run format:check
 
   Tests:
-    name: Pruebas unitarias, integración y cobertura
+    name: Tests
     needs: Calidad
     runs-on: ubuntu-latest
     steps:
@@ -63,7 +63,7 @@ jobs:
           path: coverage/
 
   E2E:
-    name: Pruebas extremo a extremo con Playwright
+    name: E2E
     needs: Tests
     runs-on: ubuntu-latest
     steps:
