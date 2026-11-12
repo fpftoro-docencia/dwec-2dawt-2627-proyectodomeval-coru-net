@@ -1,7 +1,10 @@
 /**
- * @fileoverview Controlador para la página de registro (registro.html).
+ * @fileoverview Controlador para la página de registro (`registro.html`).
+ * HTML requerido: `#formulario-registro`, `#campo-usuario`, `#campo-correo`, `#campo-clave`,
+ * `#campo-clave-repetida`, `#campo-aceptacion`, `#boton-registro`, `#req-longitud`,
+ * `#req-minuscula`, `#req-mayuscula`, `#req-cifra` y `#contenedor-avisos`.
  * Incluye validación de contraseña en vivo, validación accesible en tiempo real
- * (blur en fase de captura e input en burbuja) y control de doble envío (Requisito 5 y 18).
+ * (`blur` en fase de captura e `input` en burbuja) y control de doble envío (Requisito 5 y 18).
  * @module paginas/registro
  */
 
@@ -44,6 +47,10 @@ function marcarEstadoValidacion(campo, cajaError, esValido, mensajeError = '') {
  * Inicializa la página de registro.
  * @param {Location} [navegacion=window.location]
  * @param {Function} [funcionRegistrar=registrarUsuario]
+ * @fires CustomEvent#aviso
+ * @listens HTMLFormElement#blur
+ * @listens HTMLFormElement#input
+ * @listens HTMLFormElement#submit
  */
 export function inicializarPaginaRegistro(
   navegacion = window.location,

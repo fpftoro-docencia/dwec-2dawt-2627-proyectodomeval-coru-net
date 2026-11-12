@@ -88,3 +88,24 @@ Diario de aprendizaje del proyecto DOM para DWEC (2º DAWT, 2026/2027).
   }
   ```
   Combinado con un `debounce` de 250 ms probado con `vi.useFakeTimers()` y `vi.advanceTimersByTime()`, evitamos recalcular y repintar el DOM en cada pulsación rápida de teclado.
+
+---
+
+## 19/11/2026 · Sprint 3 · Despliegue continuo, pruebas E2E contra despliegues, Release automatizada y JSDoc
+
+### Dificultades y cómo las resolví
+
+- **Diferencias entre sintaxis de tipos TypeScript y el analizador Catharsis de JSDoc (`jsdoc -c jsdoc.json`):**  
+  Al ejecutar `npm run docs` para generar la documentación estática del proyecto, el parser Catharsis de JSDoc 4 rechazaba anotaciones propias de TypeScript como propiedades opcionales en tipos inline (`{{ valido: boolean, motivo?: string }}`), funciones flecha (`{(u: string) => boolean}`) o `ReturnType<typeof setTimeout>`. Lo solucioné declarando bloques `@typedef {Object} ResultadoValidacion` con `@property {string} [motivo]` y empleando tipos estándar de JSDoc (`{Function}`, `{number|null}`, `{Array<Object>}`), logrando que `npm run docs` genere toda la documentación sin un solo error.
+
+- **Selectores ambiguos en la prueba de humo (`e2e/humo.spec.js`):**  
+  En la página de portada (`index.html`) existen varios enlaces hacia `registro.html` (en la barra superior, en la cabecera, en el Hero y en el pie de la tarjeta de login). Al usar `page.locator('a[href="registro.html"]')` en la prueba de humo, Playwright abortó por modo estricto al encontrar 5 coincidencias. Lo resolví empleando un selector semántico basado en rol y nombre accesible: `page.getByRole('link', { name: 'Regístrate como socio' })`.
+
+### Problemas conceptuales
+
+- **Ejecución de Playwright contra despliegues remotos mediante `deployment_status` y `BASE_URL`:**  
+  En `playwright.config.js`, cuando la variable de entorno `BASE_URL` está definida, Playwright no arranca ningún servidor local (`webServer: undefined`), sino que dirige el navegador Chromium directamente hacia la URL remota indicada. Al escuchar el evento `deployment_status` en `.github/workflows/despliegue.yml` y filtrar `github.event.deployment_status.state == 'success'`, podemos ejecutar exactamente la misma batería E2E contra la vista previa recién publicada por Vercel antes de promoverla a producción.
+
+- **Automatización de entregas con etiquetas Git (`v*`) y `gh release create`:**  
+  El flujo `.github/workflows/release.yml` garantiza que ninguna versión etiquetada (`v1.0`) se publique sin haber superado antes tres barreras secuenciales: `Comprobar` (calidad, cobertura >= 90 %, JSDoc y compilación `dist/`), `Humo` (prueba E2E rápida de disponibilidad) y `Release` (empaquetado `.zip` de `dist/` y creación de la Release en GitHub con notas generadas automáticamente a partir del historial de commits).
+
