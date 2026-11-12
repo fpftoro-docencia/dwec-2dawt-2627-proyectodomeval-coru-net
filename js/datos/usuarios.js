@@ -1,11 +1,12 @@
 /**
- * @fileoverview Gestión de usuarios y credenciales en localStorage.
+ * @fileoverview Gestión de usuarios, credenciales y roles en localStorage.
  * Las contraseñas se almacenan únicamente como resumen SHA-256.
  * @module datos/usuarios
  */
 
 import { resumirClave } from '../clave.js';
 import { leerJSON, guardarJSON } from './almacen.js';
+import { normalizarTextoBusqueda } from './socios.js';
 
 export const CLAVE_USUARIOS = 'club_usuarios';
 
@@ -113,4 +114,71 @@ export async function autenticarUsuario(
   }
 
   return null;
+}
+
+/**
+ * Cambia el rol de un usuario registrado ('administrador' <-> 'usuario').
+ * Impide que el administrador activo se quite su propio rol (Requisito 20).
+ * @param {string} nombreUsuario Usuario objetivo cuyo rol se desea modificar.
+ * @param {'administrador' | 'usuario'} nuevoRol Nuevo rol a asignar.
+ * @param {string} [usuarioSolicitante=''] Nombre del administrador con sesión activa.
+ * @param {Storage | { getItem: (k: string) => string | null, setItem: (k: string, v: string) => void }} [almacen=localStorage]
+ * @returns {Usuario} El usuario actualizado.
+ */
+export function cambiarRolUsuario(
+  nombreUsuario,
+  nuevoRol,
+  usuarioSolicitante = '',
+  almacen = localStorage,
+) {
+  if (nuevoRol !== 'administrador' && nuevoRol !== 'usuario') {
+    throw new Error('El rol indicado no es válido.');
+  }
+
+  const objetivoLimpio = String(nombreUsuario || '')
+    .trim()
+    .toLowerCase();
+  const solicitanteLimpio = String(usuarioSolicitante || '')
+    .trim()
+    .toLowerCase();
+
+  if (solicitanteLimpio && objetivoLimpio === solicitanteLimpio && nuevoRol !== 'administrador') {
+    throw new Error('El administrador activo no puede quitarse su propio rol de administrador.');
+  }
+
+  const usuarios = obtenerUsuarios(almacen);
+  const indice = usuarios.findIndex((u) => u.usuario.toLowerCase() === objetivoLimpio);
+
+  if (indice === -1) {
+    throw new Error(`No existe ningún usuario registrado con el nombre «${nombreUsuario}».`);
+  }
+
+  const actualizado = {
+    ...usuarios[indice],
+    rol: nuevoRol,
+  };
+
+  usuarios[indice] = actualizado;
+  guardarJSON(almacen, CLAVE_USUARIOS, usuarios);
+
+  return actualizado;
+}
+
+/**
+ * Filtra la lista de usuarios por nombre de usuario, correo o rol ignorando mayúsculas y tildes.
+ * @param {Usuario[]} usuarios
+ * @param {string} termino
+ * @returns {Usuario[]}
+ */
+export function filtrarUsuarios(usuarios, termino) {
+  if (!Array.isArray(usuarios)) {
+    return [];
+  }
+  const busqueda = normalizarTextoBusqueda(termino);
+  if (!busqueda) {
+    return [...usuarios];
+  }
+  return usuarios.filter((u) =>
+    [u.usuario, u.correo, u.rol].some((campo) => normalizarTextoBusqueda(campo).includes(busqueda)),
+  );
 }
