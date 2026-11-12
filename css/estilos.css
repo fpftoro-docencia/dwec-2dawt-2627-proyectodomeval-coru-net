@@ -323,6 +323,31 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Diálogo nativo <dialog> y Paginación (Sprint 2)
+   -------------------------------------------------------------------------- */
+.dialogo-club {
+  max-width: 460px;
+  width: 92%;
+  background-color: var(--color-surface);
+  color: var(--color-dark);
+}
+
+.dialogo-club::backdrop {
+  background-color: rgba(15, 15, 17, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.pagination .page-link {
+  color: var(--color-dark);
+}
+
+/* --------------------------------------------------------------------------
    Footer
    -------------------------------------------------------------------------- */
 .site-footer {

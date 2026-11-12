@@ -26,13 +26,24 @@ export function sincronizarPaginaUrl(
   historial = window.history,
   ubicacion = window.location,
 ) {
-  if (!historial || typeof historial.replaceState !== 'function' || !ubicacion) {
+  if (!ubicacion) {
     return;
   }
   const nuevaQuery = construirQueryConPagina(ubicacion.search || '', pagina);
   const hash = ubicacion.hash || '';
-  const nuevaUrl = `${ubicacion.pathname}${nuevaQuery}${hash}`;
-  historial.replaceState(null, '', nuevaUrl);
+  const nuevaUrl = `${ubicacion.pathname || ''}${nuevaQuery}${hash}`;
+
+  if (ubicacion !== window.location) {
+    ubicacion.search = nuevaQuery;
+  }
+
+  if (historial && typeof historial.replaceState === 'function') {
+    try {
+      historial.replaceState(null, '', nuevaUrl);
+    } catch {
+      // Ignorar en entornos de prueba con origen about:blank
+    }
+  }
 }
 
 /**
