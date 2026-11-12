@@ -54,12 +54,12 @@ export function inicializarPaginaUsuarios(navegacion = window.location) {
 
   let paginaSolicitada = leerPaginaUrl(navegacion);
   let terminoBusqueda = '';
-  /** @type {ReturnType<typeof setTimeout> | null} */
+  /** @type {number | null} */
   let temporizadorDebounce = null;
 
   /**
    * Crea una fila de usuario desde el `<template>` usando únicamente `textContent`.
-   * @param {import('../datos/usuarios.js').Usuario} cuenta
+   * @param {Object} cuenta
    * @returns {DocumentFragment | null}
    */
   function crearFilaUsuario(cuenta) {

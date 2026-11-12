@@ -16,7 +16,7 @@ import {
 /**
  * Inicializa la página de inicio de sesión.
  * @param {Location} [navegacion=window.location]
- * @param {typeof autenticarUsuario} [funcionAutenticar=autenticarUsuario]
+ * @param {Function} [funcionAutenticar=autenticarUsuario]
  */
 export function inicializarPaginaLogin(
   navegacion = window.location,
