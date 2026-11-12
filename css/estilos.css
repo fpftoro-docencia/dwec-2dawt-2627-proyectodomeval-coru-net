@@ -1,0 +1,369 @@
+/* ==========================================================================
+   Club Ciclista Pedal & Cadencia - Estilos inspirados en Specialized
+   ========================================================================== */
+
+:root {
+  --color-primary: #0f0f11;
+  --color-dark: #1a1a1d;
+  --color-accent: #d90429;
+  --color-accent-hover: #b00320;
+  --color-surface: #ffffff;
+  --color-bg-soft: #f5f6f8;
+  --color-border: #e2e4e8;
+  --color-text-muted: #6c757d;
+  --font-brand: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+body {
+  font-family: var(--font-brand);
+  color: var(--color-dark);
+  background-color: var(--color-bg-soft);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   Top Utilities Bar (Estilo Specialized)
+   -------------------------------------------------------------------------- */
+.top-utility-bar {
+  background-color: var(--color-primary);
+  color: #adb5bd;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.top-utility-bar a {
+  color: #adb5bd;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.top-utility-bar a:hover {
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Cabecera Principal y Logo Deportivo
+   -------------------------------------------------------------------------- */
+.main-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.brand-logo {
+  font-size: 1.55rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1.5px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-logo .brand-badge {
+  color: var(--color-accent);
+}
+
+.brand-logo:hover {
+  color: var(--color-dark);
+}
+
+.nav-link-custom {
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-dark);
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav-link-custom:hover {
+  color: var(--color-accent);
+}
+
+.nav-link-custom.active {
+  color: var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Hero Banner Deportivo (Impacto Specialized)
+   -------------------------------------------------------------------------- */
+.hero-specialized {
+  position: relative;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 15, 17, 0.85) 0%,
+      rgba(15, 15, 17, 0.45) 55%,
+      rgba(15, 15, 17, 0.75) 100%
+    ),
+    url('../img/hero-mtb.jpg') center 35% / cover no-repeat;
+  color: #ffffff;
+  padding: 5.5rem 0 6.5rem 0;
+  overflow: hidden;
+}
+
+.hero-subtitle {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8f9fa;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.5px;
+  margin-bottom: 1.25rem;
+}
+
+.hero-text {
+  font-size: 1.15rem;
+  color: #dee2e6;
+  max-width: 580px;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   Botones de Acción (Specialized style)
+   -------------------------------------------------------------------------- */
+.btn-specialized-primary {
+  background-color: #ffffff;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  border: 2px solid #ffffff;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-specialized-primary:hover {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.btn-specialized-outline {
+  background-color: transparent;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  border: 2px solid #ffffff;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-specialized-outline:hover {
+  background-color: #ffffff;
+  color: var(--color-primary);
+}
+
+.btn-specialized-dark {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  border: 2px solid var(--color-primary);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  width: 100%;
+}
+
+.btn-specialized-dark:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Tarjeta de Formulario (Login / Registro / Ficha)
+   -------------------------------------------------------------------------- */
+.form-card-container {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 2.25rem;
+}
+
+.form-card-header {
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.form-card-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.form-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-dark);
+}
+
+.form-control,
+.form-select {
+  border-radius: 4px;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #ced4da;
+  font-size: 0.95rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(15, 15, 17, 0.15);
+}
+
+.boton-toggle-clave {
+  border-color: #ced4da;
+  background-color: #ffffff;
+  color: var(--color-dark);
+  font-size: 1.05rem;
+  padding: 0 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.boton-toggle-clave:hover {
+  background-color: var(--color-bg-soft);
+  color: var(--color-primary);
+  border-color: #ced4da;
+}
+
+.boton-toggle-clave:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(15, 15, 17, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   Indicadores de Requisitos de Contraseña (Requisito 5)
+   -------------------------------------------------------------------------- */
+.password-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0 0;
+  font-size: 0.83rem;
+}
+
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-muted);
+  transition: color 0.2s ease;
+}
+
+.password-requirements li.valido {
+  color: #198754;
+  font-weight: 600;
+}
+
+.password-requirements li.invalido {
+  color: #dc3545;
+}
+
+.req-icon {
+  width: 16px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Región de Avisos Accesible (role="status")
+   -------------------------------------------------------------------------- */
+.contenedor-avisos {
+  margin-bottom: 1.5rem;
+}
+
+.contenedor-avisos:empty {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Diálogo nativo <dialog> y Paginación (Sprint 2)
+   -------------------------------------------------------------------------- */
+.dialogo-club {
+  max-width: 460px;
+  width: 92%;
+  background-color: var(--color-surface);
+  color: var(--color-dark);
+}
+
+.dialogo-club::backdrop {
+  background-color: rgba(15, 15, 17, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.pagination .page-link {
+  color: var(--color-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.site-footer {
+  background-color: var(--color-primary);
+  color: #adb5bd;
+  font-size: 0.85rem;
+  padding: 2.5rem 0 1.5rem 0;
+  margin-top: auto;
+  border-top: 3px solid var(--color-accent);
+}
+
+.site-footer a {
+  color: #dee2e6;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: #ffffff;
+}

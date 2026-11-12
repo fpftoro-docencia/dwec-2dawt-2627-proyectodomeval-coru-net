@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ficha de Socio · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia -->
+    <link rel="stylesheet" href="css/estilos.css" />
+    <!-- Script modular de la página de ficha -->
+    <script type="module" src="js/paginas/ficha.js"></script>
+  </head>
+  <body>
+    <!-- Cabecera privada con menú compartido y botón de cierre de sesión -->
+    <header class="main-header"></header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 py-4">
+      <div class="container">
+        <!-- Región de avisos accesible (role="status") -->
+        <div
+          id="contenedor-avisos"
+          class="contenedor-avisos"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="form-card-container">
+              <div
+                class="form-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+              >
+                <div>
+                  <h1 id="titulo-ficha" class="form-card-title">Alta de Socio Ciclista</h1>
+                  <small id="subtitulo-ficha" class="text-muted">
+                    Completa los datos personales, federativos y bicicletas del socio
+                  </small>
+                </div>
+                <a href="listado.html" class="btn btn-outline-secondary btn-sm fw-bold">
+                  ← Volver al Listado
+                </a>
+              </div>
+
+              <form id="formulario-ficha" novalidate>
+                <div class="row g-3">
+                  <!-- 1. Nombre completo -->
+                  <div class="col-md-7">
+                    <label for="campo-nombre" class="form-label">Nombre y apellidos</label>
+                    <input
+                      type="text"
+                      id="campo-nombre"
+                      name="nombre"
+                      class="form-control"
+                      placeholder="Ej. Álvaro Valero Serrano"
+                      required
+                      aria-describedby="error-nombre"
+                    />
+                    <div id="error-nombre" class="invalid-feedback"></div>
+                  </div>
+
+                  <!-- 2. DNI -->
+                  <div class="col-md-5">
+                    <label for="campo-dni" class="form-label">DNI (8 cifras y letra)</label>
+                    <input
+                      type="text"
+                      id="campo-dni"
+                      name="dni"
+                      class="form-control text-uppercase"
+                      placeholder="Ej. 12345678Z"
+                      maxlength="9"
+                      required
+                      aria-describedby="error-dni"
+                    />
+                    <div id="error-dni" class="invalid-feedback"></div>
+                  </div>
+
+                  <!-- 3. Fecha de nacimiento -->
+                  <div class="col-md-4">
+                    <label for="campo-fecha-nacimiento" class="form-label">
+                      Fecha de nacimiento
+                    </label>
+                    <input
+                      type="date"
+                      id="campo-fecha-nacimiento"
+                      name="fechaNacimiento"
+                      class="form-control"
+                      required
+                      aria-describedby="error-fecha-nacimiento"
+                    />
+                    <div id="error-fecha-nacimiento" class="invalid-feedback"></div>
+                  </div>
+
+                  <!-- 4. Categoría deportiva -->
+                  <div class="col-md-4">
+                    <label for="campo-categoria" class="form-label">Categoría</label>
+                    <select id="campo-categoria" name="categoria" class="form-select">
+                      <option value="Sub-23">Sub-23</option>
+                      <option value="Élite">Élite</option>
+                      <option value="Máster 30">Máster 30</option>
+                      <option value="Máster 40">Máster 40</option>
+                      <option value="Cicloturista" selected>Cicloturista</option>
+                    </select>
+                  </div>
+
+                  <!-- 5. Cuota mensual -->
+                  <div class="col-md-4">
+                    <label for="campo-cuota" class="form-label">Cuota mensual (€)</label>
+                    <input
+                      type="number"
+                      id="campo-cuota"
+                      name="cuota"
+                      class="form-control"
+                      min="10"
+                      max="500"
+                      step="5"
+                      value="35"
+                      required
+                      aria-describedby="error-cuota"
+                    />
+                    <div id="error-cuota" class="invalid-feedback"></div>
+                  </div>
+
+                  <!-- 6. Casilla ¿Federado? y Campo Condicional de Licencia (Requisito 16) -->
+                  <div class="col-12 mt-4">
+                    <div class="p-3 bg-light rounded border">
+                      <div class="form-check">
+                        <input
+                          type="checkbox"
+                          id="campo-federado"
+                          name="federado"
+                          value="si"
+                          class="form-check-input"
+                        />
+                        <label for="campo-federado" class="form-check-label fw-bold">
+                          ¿El socio dispone de licencia federativa en vigor?
+                        </label>
+                      </div>
+
+                      <!-- Campo condicional: hidden y disabled mientras no esté marcada la casilla -->
+                      <div id="contenedor-licencia" class="mt-3" hidden>
+                        <label for="campo-licencia" class="form-label">
+                          Código de licencia federativa
+                        </label>
+                        <input
+                          type="text"
+                          id="campo-licencia"
+                          name="licencia"
+                          class="form-control text-uppercase"
+                          placeholder="Ej. ESP-ELI-2026-01"
+                          disabled
+                          aria-describedby="error-licencia"
+                        />
+                        <div id="error-licencia" class="invalid-feedback"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 7. Grupo dinámico de Bicicletas (mín 0, máx 3) (Requisito 17) -->
+                  <div class="col-12 mt-4">
+                    <div
+                      class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2"
+                    >
+                      <div>
+                        <h2 class="h6 fw-bold text-uppercase mb-0">
+                          Bicicletas registradas en el club
+                        </h2>
+                        <small id="contador-bicicletas" class="text-muted">
+                          0 de 3 bicicletas añadidas
+                        </small>
+                      </div>
+                      <button
+                        type="button"
+                        id="boton-anadir-bici"
+                        class="btn btn-outline-dark btn-sm fw-bold text-uppercase"
+                      >
+                        + Añadir bicicleta
+                      </button>
+                    </div>
+
+                    <div id="contenedor-bicicletas" class="d-flex flex-column gap-3 mb-3"></div>
+                  </div>
+                </div>
+
+                <!-- Botones de envío y cancelación -->
+                <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <a href="listado.html" class="btn btn-outline-secondary fw-bold px-4">
+                    Cancelar
+                  </a>
+                  <button
+                    type="submit"
+                    id="boton-guardar-ficha"
+                    class="btn btn-specialized-dark px-4"
+                  >
+                    Guardar Ficha de Socio
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Plantilla obligatoria <template> para cada bicicleta del grupo dinámico (Requisito 17) -->
+    <template id="plantilla-bicicleta">
+      <fieldset class="bloque-bicicleta p-3 border rounded bg-white shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <legend class="h6 fw-bold text-uppercase mb-0 w-auto titulo-bicicleta">
+            Bicicleta #1
+          </legend>
+          <button
+            type="button"
+            class="btn btn-outline-danger btn-sm fw-bold boton-eliminar-bici"
+            aria-label="Eliminar bicicleta"
+          >
+            Quitar bicicleta
+          </button>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold label-bici-marca">Marca</label>
+            <input
+              type="text"
+              class="form-control form-control-sm input-bici-marca"
+              placeholder="Ej. Specialized"
+              required
+            />
+            <div class="invalid-feedback error-bici-marca"></div>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label small fw-bold label-bici-modelo">Modelo</label>
+            <input
+              type="text"
+              class="form-control form-control-sm input-bici-modelo"
+              placeholder="Ej. S-Works Epic 8"
+              required
+            />
+            <div class="invalid-feedback error-bici-modelo"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-bold label-bici-disciplina">Disciplina</label>
+            <select class="form-select form-select-sm select-bici-disciplina">
+              <option value="Montaña (MTB)">Montaña (MTB)</option>
+              <option value="Carretera">Carretera</option>
+              <option value="Gravel">Gravel</option>
+              <option value="Enduro / DH">Enduro / DH</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+    </template>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+  </body>
+</html>
