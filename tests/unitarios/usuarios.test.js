@@ -5,10 +5,12 @@ import {
   registrarUsuario,
   autenticarUsuario,
   existeUsuario,
+  cambiarRolUsuario,
+  filtrarUsuarios,
   CLAVE_USUARIOS,
 } from '../../js/datos/usuarios.js';
 
-describe('Módulo de datos: Usuarios (con AlmacenFalso)', () => {
+describe('Módulo de datos: Usuarios y Roles (con AlmacenFalso)', () => {
   let almacen;
 
   beforeEach(() => {
@@ -56,7 +58,6 @@ describe('Módulo de datos: Usuarios (con AlmacenFalso)', () => {
       almacen,
     );
 
-    // Intentar registrar el mismo (incluso variando mayúsculas) debe fallar
     await expect(
       registrarUsuario(
         { usuario: 'Ciclista1', correo: 'otro@club.es', clave: 'Clave1234' },
@@ -65,7 +66,7 @@ describe('Módulo de datos: Usuarios (con AlmacenFalso)', () => {
     ).rejects.toThrow(/ya está registrado/);
   });
 
-  it('autentica correctamente con la contraseña correcta', async () => {
+  it('autentica correctamente con la contraseña correcta o por correo', async () => {
     await registrarUsuario(
       { usuario: 'juan_perez', correo: 'juan@club.es', clave: 'MiPass123' },
       almacen,
@@ -75,7 +76,6 @@ describe('Módulo de datos: Usuarios (con AlmacenFalso)', () => {
     expect(usuarioAutenticado).not.toBeNull();
     expect(usuarioAutenticado?.usuario).toBe('juan_perez');
 
-    // También permite autenticar por correo
     const porCorreo = await autenticarUsuario('juan@club.es', 'MiPass123', almacen);
     expect(porCorreo).not.toBeNull();
   });
@@ -93,8 +93,53 @@ describe('Módulo de datos: Usuarios (con AlmacenFalso)', () => {
     expect(usuarioInexistente).toBeNull();
   });
 
+  it('permite cambiar el rol de otro usuario pero impide que el admin activo se quite su propio rol', async () => {
+    await registrarUsuario(
+      { usuario: 'adminPrincipal', correo: 'admin@club.es', clave: 'Clave1234' },
+      almacen,
+    );
+    await registrarUsuario(
+      { usuario: 'socioRuta', correo: 'ruta@club.es', clave: 'Clave1234' },
+      almacen,
+    );
+
+    const ascendido = cambiarRolUsuario('socioRuta', 'administrador', 'adminPrincipal', almacen);
+    expect(ascendido.rol).toBe('administrador');
+
+    const degradado = cambiarRolUsuario('socioRuta', 'usuario', 'adminPrincipal', almacen);
+    expect(degradado.rol).toBe('usuario');
+
+    expect(() => cambiarRolUsuario('adminPrincipal', 'usuario', 'adminPrincipal', almacen)).toThrow(
+      /no puede quitarse su propio rol/,
+    );
+
+    expect(() =>
+      cambiarRolUsuario('inexistente', 'administrador', 'adminPrincipal', almacen),
+    ).toThrow(/No existe ningún usuario/);
+
+    expect(() => cambiarRolUsuario('socioRuta', 'superusuario', 'adminPrincipal', almacen)).toThrow(
+      /rol indicado no es válido/,
+    );
+  });
+
+  it('filtra usuarios por nombre, correo o rol ignorando mayúsculas', async () => {
+    await registrarUsuario(
+      { usuario: 'adminPrincipal', correo: 'admin@club.es', clave: 'Clave1234' },
+      almacen,
+    );
+    await registrarUsuario(
+      { usuario: 'socioRuta', correo: 'ruta@club.es', clave: 'Clave1234' },
+      almacen,
+    );
+
+    const todos = obtenerUsuarios(almacen);
+    expect(filtrarUsuarios(todos, '')).toHaveLength(2);
+    expect(filtrarUsuarios(todos, 'RUTA')).toHaveLength(1);
+    expect(filtrarUsuarios(todos, 'administrador')).toHaveLength(1);
+    expect(filtrarUsuarios(null, 'x')).toEqual([]);
+  });
+
   it('no falla si lo guardado en el almacén está estropeado (devuelve valor por defecto)', () => {
-    // Simulamos datos corruptos introducidos manualmente en localStorage
     almacen.setItem(CLAVE_USUARIOS, '{ json roto corrupto ;;;');
 
     expect(() => obtenerUsuarios(almacen)).not.toThrow();
