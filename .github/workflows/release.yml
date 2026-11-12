@@ -1,0 +1,99 @@
+name: Publicación de Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  Comprobar:
+    name: Comprobar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Analizar código con ESLint
+        run: npm run lint
+
+      - name: Verificar formato con Prettier
+        run: npm run format:check
+
+      - name: Ejecutar tests y cobertura (>= 90%)
+        run: npm run coverage
+
+      - name: Verificar generación de documentación JSDoc
+        run: npm run docs
+
+      - name: Verificar construcción de la carpeta dist/
+        run: npm run build
+
+  Humo:
+    name: Humo
+    needs: Comprobar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Instalar navegador Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar prueba de humo contra la web desplegada (o local si no hay PRODUCTION_URL)
+        env:
+          BASE_URL: ${{ vars.PRODUCTION_URL }}
+        run: npx playwright test e2e/humo.spec.js
+
+  Release:
+    name: Release
+    needs: Humo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 24 con caché de npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Construir paquete estático en dist/
+        run: npm run build
+
+      - name: Empaquetar carpeta dist/ en archivo ZIP
+        run: |
+          cd dist
+          zip -r "../pedal-y-cadencia-${GITHUB_REF_NAME}.zip" .
+
+      - name: Crear Release en GitHub con notas automáticas y archivo ZIP adjunto
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "pedal-y-cadencia-${GITHUB_REF_NAME}.zip" \
+            --title "Club Ciclista Pedal & Cadencia ${GITHUB_REF_NAME}" \
+            --generate-notes
