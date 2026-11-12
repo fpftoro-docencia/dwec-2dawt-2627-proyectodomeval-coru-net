@@ -1,6 +1,7 @@
 /**
  * @fileoverview Controlador para la página de registro (registro.html).
- * Incluye validación de contraseña en vivo y control de doble envío (Requisito 5).
+ * Incluye validación de contraseña en vivo, validación accesible en tiempo real
+ * (blur en fase de captura e input en burbuja) y control de doble envío (Requisito 5 y 18).
  * @module paginas/registro
  */
 
@@ -15,10 +16,39 @@ import {
 import { iniciarOyenteAvisos, lanzarAviso, guardarAvisoPendiente } from '../componentes/avisos.js';
 
 /**
+ * Aplica el estado accesible (`aria-invalid`) y visual (`is-invalid`) sobre un campo.
+ * @param {HTMLElement | null} campo
+ * @param {HTMLElement | null} cajaError
+ * @param {boolean} esValido
+ * @param {string} [mensajeError]
+ * @returns {boolean}
+ */
+function marcarEstadoValidacion(campo, cajaError, esValido, mensajeError = '') {
+  if (!campo) {
+    return true;
+  }
+  if (esValido) {
+    campo.classList.remove('is-invalid');
+    campo.setAttribute('aria-invalid', 'false');
+    return true;
+  }
+  campo.classList.add('is-invalid');
+  campo.setAttribute('aria-invalid', 'true');
+  if (cajaError && mensajeError) {
+    cajaError.textContent = mensajeError;
+  }
+  return false;
+}
+
+/**
  * Inicializa la página de registro.
  * @param {Location} [navegacion=window.location]
+ * @param {typeof registrarUsuario} [funcionRegistrar=registrarUsuario]
  */
-export function inicializarPaginaRegistro(navegacion = window.location) {
+export function inicializarPaginaRegistro(
+  navegacion = window.location,
+  funcionRegistrar = registrarUsuario,
+) {
   if (obtenerSesion()) {
     navegacion.replace('listado.html');
     return;
@@ -26,15 +56,28 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
 
   iniciarOyenteAvisos();
 
-  const formulario = document.getElementById('formulario-registro');
-  const campoUsuario = document.getElementById('campo-usuario');
-  const campoCorreo = document.getElementById('campo-correo');
-  const campoClave = document.getElementById('campo-clave');
-  const campoClaveRepetida = document.getElementById('campo-clave-repetida');
-  const campoAceptacion = document.getElementById('campo-aceptacion');
-  const botonRegistro = document.getElementById('boton-registro');
+  const formulario = /** @type {HTMLFormElement | null} */ (
+    document.getElementById('formulario-registro')
+  );
+  const campoUsuario = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-usuario')
+  );
+  const campoCorreo = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-correo')
+  );
+  const campoClave = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-clave')
+  );
+  const campoClaveRepetida = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-clave-repetida')
+  );
+  const campoAceptacion = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-aceptacion')
+  );
+  const botonRegistro = /** @type {HTMLButtonElement | null} */ (
+    document.getElementById('boton-registro')
+  );
 
-  // Elementos de la lista de requisitos de contraseña
   const reqLongitud = document.getElementById('req-longitud');
   const reqMinuscula = document.getElementById('req-minuscula');
   const reqMayuscula = document.getElementById('req-mayuscula');
@@ -47,7 +90,7 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
   // Configuración de los botones para ver/ocultar contraseñas (Toggle / 'Ojito')
   const conectarTogglePassword = (idBoton, idCampo) => {
     const boton = document.getElementById(idBoton);
-    const campo = document.getElementById(idCampo);
+    const campo = /** @type {HTMLInputElement | null} */ (document.getElementById(idCampo));
     if (!boton || !campo) {
       return;
     }
@@ -68,19 +111,8 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
   conectarTogglePassword('boton-toggle-clave', 'campo-clave');
   conectarTogglePassword('boton-toggle-clave-repetida', 'campo-clave-repetida');
 
-  // Comprobación de requisitos de contraseña en tiempo real mientras escribe (Requisito 5)
-  campoClave.addEventListener('input', () => {
-    const valor = campoClave.value;
-    const resultado = evaluarRequisitosClave(valor);
-
-    actualizarElementoRequisito(reqLongitud, resultado.longitud);
-    actualizarElementoRequisito(reqMinuscula, resultado.minuscula);
-    actualizarElementoRequisito(reqMayuscula, resultado.mayuscula);
-    actualizarElementoRequisito(reqCifra, resultado.cifra);
-  });
-
   /**
-   * Actualiza el aspecto visual del elemento de requisito.
+   * Actualiza el aspecto visual del elemento de requisito de contraseña.
    * @param {HTMLElement | null} elemento
    * @param {boolean} cumple
    */
@@ -103,6 +135,107 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
     }
   }
 
+  // Comprobación de requisitos de contraseña en tiempo real mientras escribe (Requisito 5)
+  campoClave.addEventListener('input', () => {
+    const resultado = evaluarRequisitosClave(campoClave.value);
+    actualizarElementoRequisito(reqLongitud, resultado.longitud);
+    actualizarElementoRequisito(reqMinuscula, resultado.minuscula);
+    actualizarElementoRequisito(reqMayuscula, resultado.mayuscula);
+    actualizarElementoRequisito(reqCifra, resultado.cifra);
+  });
+
+  /** @type {WeakSet<HTMLElement>} */
+  const camposTocados = new WeakSet();
+
+  /**
+   * Valida un campo individual del formulario de registro.
+   * @param {HTMLElement} objetivo
+   * @returns {boolean}
+   */
+  function validarCampoIndividual(objetivo) {
+    if (objetivo === campoUsuario) {
+      const res = validarNombreUsuario(campoUsuario.value, (u) => existeUsuario(u));
+      return marcarEstadoValidacion(
+        campoUsuario,
+        document.getElementById('error-usuario'),
+        res.valido,
+        res.motivo,
+      );
+    }
+
+    if (objetivo === campoCorreo && campoCorreo) {
+      const res = validarCorreo(campoCorreo.value);
+      return marcarEstadoValidacion(
+        campoCorreo,
+        document.getElementById('error-correo'),
+        res.valido,
+        res.motivo,
+      );
+    }
+
+    if (objetivo === campoClave) {
+      const res = evaluarRequisitosClave(campoClave.value);
+      return marcarEstadoValidacion(
+        campoClave,
+        document.getElementById('error-clave'),
+        res.esValida,
+        'La contraseña no cumple todos los requisitos exigidos.',
+      );
+    }
+
+    if (objetivo === campoClaveRepetida && campoClaveRepetida) {
+      const res = validarRepeticionClave(campoClave.value, campoClaveRepetida.value);
+      return marcarEstadoValidacion(
+        campoClaveRepetida,
+        document.getElementById('error-clave-repetida'),
+        res.valido,
+        res.motivo,
+      );
+    }
+
+    if (objetivo === campoAceptacion && campoAceptacion) {
+      return marcarEstadoValidacion(
+        campoAceptacion,
+        document.getElementById('error-aceptacion'),
+        campoAceptacion.checked,
+        'Debes aceptar las condiciones para formalizar el alta.',
+      );
+    }
+
+    return true;
+  }
+
+  // Primera validación al salir del campo (blur en fase de captura) (Requisito 18)
+  formulario.addEventListener(
+    'blur',
+    (evento) => {
+      const objetivo = /** @type {HTMLElement | null} */ (evento.target);
+      if (objetivo && objetivo.tagName === 'INPUT') {
+        camposTocados.add(objetivo);
+        validarCampoIndividual(objetivo);
+      }
+    },
+    true,
+  );
+
+  // Posteriores validaciones en input / change (en fase de burbuja) (Requisito 18)
+  formulario.addEventListener('input', (evento) => {
+    const objetivo = /** @type {HTMLElement | null} */ (evento.target);
+    if (objetivo && camposTocados.has(objetivo)) {
+      validarCampoIndividual(objetivo);
+      if (objetivo === campoClave && campoClaveRepetida && camposTocados.has(campoClaveRepetida)) {
+        validarCampoIndividual(campoClaveRepetida);
+      }
+    }
+  });
+
+  if (campoAceptacion) {
+    campoAceptacion.addEventListener('change', () => {
+      camposTocados.add(campoAceptacion);
+      validarCampoIndividual(campoAceptacion);
+    });
+  }
+
   let enviando = false;
 
   formulario.addEventListener('submit', async (evento) => {
@@ -112,62 +245,24 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
       return;
     }
 
+    const listaCampos = [
+      campoUsuario,
+      campoCorreo,
+      campoClave,
+      campoClaveRepetida,
+      campoAceptacion,
+    ].filter(Boolean);
+
+    /** @type {HTMLElement | null} */
     let primerInvalido = null;
 
-    // 1. Validar usuario
-    const resUsuario = validarNombreUsuario(campoUsuario.value, (u) => existeUsuario(u));
-    const errorUsuario = document.getElementById('error-usuario');
-    if (!resUsuario.valido) {
-      campoUsuario.classList.add('is-invalid');
-      if (errorUsuario && resUsuario.motivo) {
-        errorUsuario.textContent = resUsuario.motivo;
+    for (const campo of listaCampos) {
+      const el = /** @type {HTMLElement} */ (campo);
+      camposTocados.add(el);
+      const valido = validarCampoIndividual(el);
+      if (!valido && !primerInvalido) {
+        primerInvalido = el;
       }
-      primerInvalido = primerInvalido || campoUsuario;
-    } else {
-      campoUsuario.classList.remove('is-invalid');
-    }
-
-    // 2. Validar correo
-    const resCorreo = validarCorreo(campoCorreo.value);
-    const errorCorreo = document.getElementById('error-correo');
-    if (!resCorreo.valido) {
-      campoCorreo.classList.add('is-invalid');
-      if (errorCorreo && resCorreo.motivo) {
-        errorCorreo.textContent = resCorreo.motivo;
-      }
-      primerInvalido = primerInvalido || campoCorreo;
-    } else {
-      campoCorreo.classList.remove('is-invalid');
-    }
-
-    // 3. Validar requisitos de contraseña
-    const resClave = evaluarRequisitosClave(campoClave.value);
-    if (!resClave.esValida) {
-      campoClave.classList.add('is-invalid');
-      primerInvalido = primerInvalido || campoClave;
-    } else {
-      campoClave.classList.remove('is-invalid');
-    }
-
-    // 4. Validar repetición de contraseña
-    const resRepeticion = validarRepeticionClave(campoClave.value, campoClaveRepetida.value);
-    const errorRepeticion = document.getElementById('error-clave-repetida');
-    if (!resRepeticion.valido) {
-      campoClaveRepetida.classList.add('is-invalid');
-      if (errorRepeticion && resRepeticion.motivo) {
-        errorRepeticion.textContent = resRepeticion.motivo;
-      }
-      primerInvalido = primerInvalido || campoClaveRepetida;
-    } else {
-      campoClaveRepetida.classList.remove('is-invalid');
-    }
-
-    // 5. Validar casilla de aceptación
-    if (!campoAceptacion.checked) {
-      campoAceptacion.classList.add('is-invalid');
-      primerInvalido = primerInvalido || campoAceptacion;
-    } else {
-      campoAceptacion.classList.remove('is-invalid');
     }
 
     if (primerInvalido) {
@@ -178,44 +273,43 @@ export function inicializarPaginaRegistro(navegacion = window.location) {
 
     try {
       enviando = true;
-      botonRegistro.disabled = true;
-      botonRegistro.textContent = 'Registrando socio...';
+      if (botonRegistro) {
+        botonRegistro.disabled = true;
+        botonRegistro.textContent = 'Registrando socio...';
+      }
 
-      const nuevoSocio = await registrarUsuario({
+      const nuevoSocio = await funcionRegistrar({
         usuario: campoUsuario.value,
-        correo: campoCorreo.value,
+        correo: campoCorreo ? campoCorreo.value : '',
         clave: campoClave.value,
       });
 
-      // Iniciar sesión automáticamente (Requisito 5)
       iniciarSesion({
         usuario: nuevoSocio.usuario,
         rol: nuevoSocio.rol,
       });
 
-      // Dejar aviso para el listado (Requisito 5 y 8)
       const rolMensaje = nuevoSocio.rol === 'administrador' ? ' (cuenta de Administrador)' : '';
       guardarAvisoPendiente(
         `¡Bienvenido a Pedal & Cadencia, ${nuevoSocio.usuario}! Tu alta ha sido completada con éxito${rolMensaje}.`,
         'success',
       );
 
-      // Navegar al listado
       navegacion.replace('listado.html');
     } catch (error) {
-      lanzarAviso(document, error.message || 'Error al completar el registro.', 'danger');
+      lanzarAviso(
+        document,
+        error instanceof Error ? error.message : 'Error al completar el registro.',
+        'danger',
+      );
     } finally {
       enviando = false;
-      botonRegistro.disabled = false;
-      botonRegistro.textContent = 'Completar Inscripción';
+      if (botonRegistro) {
+        botonRegistro.disabled = false;
+        botonRegistro.textContent = 'Completar Inscripción';
+      }
     }
   });
-
-  // Limpieza de errores al interactuar
-  [campoUsuario, campoCorreo, campoClave, campoClaveRepetida].forEach((campo) => {
-    campo.addEventListener('input', () => campo.classList.remove('is-invalid'));
-  });
-  campoAceptacion.addEventListener('change', () => campoAceptacion.classList.remove('is-invalid'));
 }
 
 if (typeof window !== 'undefined' && document.getElementById('formulario-registro')) {
