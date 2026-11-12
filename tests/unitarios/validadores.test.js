@@ -4,11 +4,16 @@ import {
   validarCorreo,
   evaluarRequisitosClave,
   validarRepeticionClave,
+  validarNombreSocio,
+  validarDni,
+  validarFechaNacimiento,
+  validarCuotaMensual,
+  validarLicenciaFederativa,
+  validarCampoBicicleta,
 } from '../../js/logica/validadores.js';
 
-describe('Validadores de Registro con tablas it.each (Requisito 10)', () => {
+describe('Validadores de Registro y Ficha de Socio con tablas it.each (Requisito 10 y 19)', () => {
   describe('validarNombreUsuario', () => {
-    // Casos válidos con límites
     it.each([
       ['abc', 'límite inferior exacto de 3 caracteres'],
       ['usuario123', 'combinación alfanumérica típica'],
@@ -20,7 +25,6 @@ describe('Validadores de Registro con tablas it.each (Requisito 10)', () => {
       expect(resultado.motivo).toBeUndefined();
     });
 
-    // Casos no válidos con motivo
     it.each([
       ['', 'El nombre de usuario es obligatorio.', 'campo vacío'],
       ['  ', 'El nombre de usuario es obligatorio.', 'solo espacios'],
@@ -107,6 +111,84 @@ describe('Validadores de Registro con tablas it.each (Requisito 10)', () => {
       const res = validarRepeticionClave('SuperClave1', '');
       expect(res.valido).toBe(false);
       expect(res.motivo).toBe('Debes repetir la contraseña.');
+    });
+  });
+
+  describe('validarDni (Regex + algoritmo módulo 23)', () => {
+    it.each([
+      ['12345678Z', 'DNI con letra Z correcta'],
+      ['00000000T', 'DNI cero con letra T'],
+      ['11111111h', 'DNI en minúscula normalizado correctamente'],
+    ])('acepta DNI válido «%s» (%s)', (dni) => {
+      expect(validarDni(dni).valido).toBe(true);
+    });
+
+    it.each([
+      ['', 'El DNI es obligatorio.'],
+      ['1234Z', 'El DNI debe constar de 8 cifras seguidas de una letra (ej. 12345678Z).'],
+      ['12345678A', 'La letra del DNI no es correcta (para 12345678 corresponde la «Z»).'],
+    ])('rechaza DNI inválido «%s» con motivo exacto', (dni, motivo) => {
+      const res = validarDni(dni);
+      expect(res.valido).toBe(false);
+      expect(res.motivo).toBe(motivo);
+    });
+
+    it('rechaza un DNI válido si ya pertenece a otro socio registrado', () => {
+      const res = validarDni('12345678Z', (d) => d === '12345678Z');
+      expect(res.valido).toBe(false);
+      expect(res.motivo).toContain('Ya existe un socio registrado');
+    });
+  });
+
+  describe('validarNombreSocio, validarFechaNacimiento, validarCuotaMensual, validarLicenciaFederativa y validarCampoBicicleta', () => {
+    it.each([
+      ['Ana', true],
+      ['Álvaro Valero Serrano', true],
+      ['', false],
+      ['Al', false],
+      ['A'.repeat(85), false],
+    ])('validarNombreSocio("%s") -> %s', (nombre, esperado) => {
+      expect(validarNombreSocio(nombre).valido).toBe(esperado);
+    });
+
+    it.each([
+      ['1995-06-15', true],
+      ['', false],
+      ['15/06/1995', false],
+      ['1995-02-31', false],
+      ['1850-01-01', false],
+      ['2099-01-01', false],
+    ])('validarFechaNacimiento("%s") -> %s', (fecha, esperado) => {
+      expect(validarFechaNacimiento(fecha).valido).toBe(esperado);
+    });
+
+    it.each([
+      ['10', true],
+      ['45', true],
+      ['500', true],
+      ['', false],
+      ['abc', false],
+      ['5', false],
+      ['600', false],
+    ])('validarCuotaMensual("%s") -> %s', (cuota, esperado) => {
+      expect(validarCuotaMensual(cuota).valido).toBe(esperado);
+    });
+
+    it.each([
+      ['', false, true, 'no federado no requiere licencia'],
+      ['ESP-2026-01', true, true, 'federado con licencia válida'],
+      ['', true, false, 'federado sin licencia falla'],
+      ['AB', true, false, 'federado con licencia demasiado corta falla'],
+    ])('validarLicenciaFederativa("%s", %s) -> %s (%s)', (lic, fed, esperado) => {
+      expect(validarLicenciaFederativa(lic, fed).valido).toBe(esperado);
+    });
+
+    it.each([
+      ['Specialized', 'marca', true],
+      ['', 'marca', false],
+      ['A', 'modelo', false],
+    ])('validarCampoBicicleta("%s", "%s") -> %s', (valor, tipo, esperado) => {
+      expect(validarCampoBicicleta(valor, tipo).valido).toBe(esperado);
     });
   });
 });
