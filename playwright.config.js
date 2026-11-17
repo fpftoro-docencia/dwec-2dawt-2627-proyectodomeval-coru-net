@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Con BASE_URL, las pruebas se ejecutan contra esa dirección (por ejemplo, la web desplegada) y no se
 // arranca ningún servidor. Sin ella, se prueba la web local, servida con `serve` en el puerto 3901.
-const BASE_URL = process.env.BASE_URL;
+const BASE_URL = process.env.BASE_URL || undefined;
 
 export default defineConfig({
   testDir: 'e2e',

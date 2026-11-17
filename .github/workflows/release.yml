@@ -62,8 +62,12 @@ jobs:
 
       - name: Ejecutar prueba de humo contra la web desplegada (o local si no hay PRODUCTION_URL)
         env:
-          BASE_URL: ${{ vars.PRODUCTION_URL }}
-        run: npx playwright test e2e/humo.spec.js
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          if [ -n "$PRODUCTION_URL" ]; then
+            export BASE_URL="$PRODUCTION_URL"
+          fi
+          npx playwright test e2e/humo.spec.js
 
   Release:
     name: Release
@@ -94,6 +98,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" "pedal-y-cadencia-${GITHUB_REF_NAME}.zip" \
-            --title "Club Ciclista Pedal & Cadencia ${GITHUB_REF_NAME}" \
-            --generate-notes
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" "pedal-y-cadencia-${GITHUB_REF_NAME}.zip" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "pedal-y-cadencia-${GITHUB_REF_NAME}.zip" \
+              --title "Club Ciclista Pedal & Cadencia ${GITHUB_REF_NAME}" \
+              --generate-notes
+          fi
