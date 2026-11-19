@@ -348,6 +348,32 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Avatares de Socio, Miniaturas de Bicicletas y Tarjetas de Quedadas
+   -------------------------------------------------------------------------- */
+.avatar-ficha-img,
+.avatar-ficha-placeholder {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 1.5rem;
+}
+
+.miniatura-bici-fila {
+  width: 38px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid #ced4da;
+}
+
+/* --------------------------------------------------------------------------
    Footer
    -------------------------------------------------------------------------- */
 .site-footer {

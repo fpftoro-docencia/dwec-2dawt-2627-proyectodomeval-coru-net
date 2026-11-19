@@ -10,8 +10,10 @@
  */
 
 import { protegerPaginaPrivada } from '../datos/sesion.js';
+import { obtenerUsuarios } from '../datos/usuarios.js';
 import {
   obtenerSocios,
+  obtenerSociosVisibles,
   obtenerSocioPorId,
   crearSocio,
   actualizarSocio,
@@ -129,12 +131,66 @@ export function inicializarPaginaFicha(navegacion = window.location) {
     document.getElementById('plantilla-bicicleta')
   );
 
+  const campoFotoPerfil = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-foto-perfil')
+  );
+  const vistaPreviaPerfil = /** @type {HTMLImageElement | null} */ (
+    document.getElementById('vista-previa-perfil')
+  );
+  const avatarInicialesFicha = document.getElementById('avatar-iniciales-ficha');
+
+  let fotoPerfilDataUrl = '';
+
+  /**
+   * Actualiza la vista previa de la foto de perfil del socio.
+   * @param {string} dataUrl
+   */
+  function actualizarVistaFotoPerfil(dataUrl) {
+    fotoPerfilDataUrl = String(dataUrl || '');
+    if (vistaPreviaPerfil && avatarInicialesFicha) {
+      if (fotoPerfilDataUrl) {
+        vistaPreviaPerfil.src = fotoPerfilDataUrl;
+        vistaPreviaPerfil.hidden = false;
+        avatarInicialesFicha.hidden = true;
+      } else {
+        vistaPreviaPerfil.removeAttribute('src');
+        vistaPreviaPerfil.hidden = true;
+        avatarInicialesFicha.hidden = false;
+      }
+    }
+  }
+
+  if (campoFotoPerfil) {
+    campoFotoPerfil.addEventListener('change', () => {
+      const archivo = campoFotoPerfil.files?.[0];
+      if (!archivo || typeof FileReader === 'undefined') {
+        return;
+      }
+      const lector = new FileReader();
+      lector.addEventListener('load', () => {
+        if (typeof lector.result === 'string') {
+          actualizarVistaFotoPerfil(lector.result);
+        }
+      });
+      lector.readAsDataURL(archivo);
+    });
+  }
+
   const parametrosUrl = new URLSearchParams(navegacion?.search || '');
   const idEdicion = parametrosUrl.get('id');
   let socioEnEdicion = null;
+  let usuarioPropietarioSocio = sesion.usuario;
 
   if (idEdicion) {
     socioEnEdicion = obtenerSocioPorId(sesion.usuario, idEdicion);
+    if (!socioEnEdicion && sesion.rol === 'administrador') {
+      const nombresCuentas = obtenerUsuarios().map((u) => u.usuario);
+      const todosClub = obtenerSociosVisibles(sesion.usuario, sesion.rol, nombresCuentas);
+      socioEnEdicion = todosClub.find((s) => s.id === idEdicion) || null;
+      if (socioEnEdicion?.propietario) {
+        usuarioPropietarioSocio = socioEnEdicion.propietario;
+      }
+    }
     if (!socioEnEdicion) {
       guardarAvisoPendiente('El socio ciclista solicitado no existe.', 'danger');
       navegacion.replace('listado.html');
@@ -229,6 +285,13 @@ export function inicializarPaginaFicha(navegacion = window.location) {
     const selectDisciplina = /** @type {HTMLSelectElement | null} */ (
       clon.querySelector('.select-bici-disciplina')
     );
+    const labelFotoBici = clon.querySelector('.label-bici-foto');
+    const inputFotoBici = /** @type {HTMLInputElement | null} */ (
+      clon.querySelector('.input-bici-foto')
+    );
+    const vistaPreviaBici = /** @type {HTMLImageElement | null} */ (
+      clon.querySelector('.vista-previa-bici')
+    );
     const botonEliminar = clon.querySelector('.boton-eliminar-bici');
 
     const idMarca = `bici-marca-${sufijo}`;
@@ -236,6 +299,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
     const idModelo = `bici-modelo-${sufijo}`;
     const idErrorModelo = `error-bici-modelo-${sufijo}`;
     const idDisciplina = `bici-disciplina-${sufijo}`;
+    const idFotoBici = `bici-foto-${sufijo}`;
 
     if (labelMarca) {
       labelMarca.setAttribute('for', idMarca);
@@ -274,6 +338,37 @@ export function inicializarPaginaFicha(navegacion = window.location) {
       }
     }
 
+    if (labelFotoBici) {
+      labelFotoBici.setAttribute('for', idFotoBici);
+    }
+    if (bloque && datosIniciales.foto) {
+      bloque.dataset.fotoBici = datosIniciales.foto;
+      if (vistaPreviaBici) {
+        vistaPreviaBici.src = datosIniciales.foto;
+        vistaPreviaBici.hidden = false;
+      }
+    }
+    if (inputFotoBici && bloque) {
+      inputFotoBici.id = idFotoBici;
+      inputFotoBici.addEventListener('change', () => {
+        const archivo = inputFotoBici.files?.[0];
+        if (!archivo || typeof FileReader === 'undefined') {
+          return;
+        }
+        const lector = new FileReader();
+        lector.addEventListener('load', () => {
+          if (typeof lector.result === 'string') {
+            bloque.dataset.fotoBici = lector.result;
+            if (vistaPreviaBici) {
+              vistaPreviaBici.src = lector.result;
+              vistaPreviaBici.hidden = false;
+            }
+          }
+        });
+        lector.readAsDataURL(archivo);
+      });
+    }
+
     if (botonEliminar && bloque) {
       botonEliminar.addEventListener('click', () => {
         bloque.remove();
@@ -297,7 +392,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
 
     if (elemento === campoDni) {
       const resultado = validarDni(campoDni.value, (dniNormalizado) => {
-        const existentes = obtenerSocios(sesion.usuario);
+        const existentes = obtenerSocios(usuarioPropietarioSocio);
         return existentes.some(
           (s) => s.dni.toUpperCase() === dniNormalizado && s.id !== socioEnEdicion?.id,
         );
@@ -380,6 +475,9 @@ export function inicializarPaginaFicha(navegacion = window.location) {
     sincronizarCampoCondicionalLicencia();
     if (campoLicencia && socioEnEdicion.federado) {
       campoLicencia.value = socioEnEdicion.licencia || '';
+    }
+    if (socioEnEdicion.fotoPerfil) {
+      actualizarVistaFotoPerfil(socioEnEdicion.fotoPerfil);
     }
     if (Array.isArray(socioEnEdicion.bicicletas)) {
       for (const bici of socioEnEdicion.bicicletas) {
@@ -478,6 +576,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
       const selDisciplina = /** @type {HTMLSelectElement | null} */ (
         bloque.querySelector('.select-bici-disciplina')
       );
+      const elementoBloque = /** @type {HTMLElement} */ (bloque);
 
       bicicletasExtraidas.push({
         marca: String(inMarca ? datosForm.get(inMarca.name) || '' : '').trim(),
@@ -485,6 +584,7 @@ export function inicializarPaginaFicha(navegacion = window.location) {
         disciplina: String(
           selDisciplina ? datosForm.get(selDisciplina.name) || 'Montaña (MTB)' : 'Montaña (MTB)',
         ),
+        foto: String(elementoBloque.dataset.fotoBici || ''),
       });
     }
 
@@ -498,12 +598,13 @@ export function inicializarPaginaFicha(navegacion = window.location) {
       cuota: Number(datosForm.get('cuota')),
       federado: esFederado,
       licencia: esFederado ? String(datosForm.get('licencia') || '').trim() : '',
+      fotoPerfil: fotoPerfilDataUrl,
       bicicletas: bicicletasExtraidas,
     };
 
     try {
       if (socioEnEdicion) {
-        actualizarSocio(sesion.usuario, socioEnEdicion.id, payloadSocio);
+        actualizarSocio(usuarioPropietarioSocio, socioEnEdicion.id, payloadSocio);
         guardarAvisoPendiente(
           `Ficha del socio «${payloadSocio.nombre}» actualizada correctamente.`,
           'success',

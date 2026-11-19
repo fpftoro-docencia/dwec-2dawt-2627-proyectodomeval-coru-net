@@ -18,6 +18,7 @@ export const MAX_BICICLETAS = 3;
  * @property {string} marca Marca del cuadro o fabricante (ej. Specialized).
  * @property {string} modelo Modelo específico (ej. S-Works Epic 8).
  * @property {string} disciplina Modalidad principal (ej. Montaña (MTB), Carretera, Gravel).
+ * @property {string} [foto] Imagen de la bicicleta en formato DataURL o ruta de imagen.
  */
 
 /**
@@ -30,6 +31,8 @@ export const MAX_BICICLETAS = 3;
  * @property {number} cuota Cuota mensual en euros.
  * @property {boolean} federado Indica si posee licencia federativa en vigor.
  * @property {string} licencia Código de licencia federativa (vacío si no está federado).
+ * @property {string} [fotoPerfil] Imagen de perfil del socio en formato DataURL o ruta de imagen.
+ * @property {string} [propietario] Usuario propietario de la ficha.
  * @property {Bicicleta[]} bicicletas Lista de bicicletas registradas (entre 0 y 3).
  * @property {string} fechaAlta Fecha ISO de alta en el sistema.
  */
@@ -71,11 +74,15 @@ export function normalizarBicicletas(listaBicicletas) {
 
   return listaBicicletas
     .filter((b) => b && typeof b === 'object')
-    .map((b) => ({
-      marca: String(b.marca || '').trim(),
-      modelo: String(b.modelo || '').trim(),
-      disciplina: String(b.disciplina || 'Montaña (MTB)').trim() || 'Montaña (MTB)',
-    }))
+    .map((b) => {
+      const fotoLimpia = String(b.foto || '').trim();
+      return {
+        marca: String(b.marca || '').trim(),
+        modelo: String(b.modelo || '').trim(),
+        disciplina: String(b.disciplina || 'Montaña (MTB)').trim() || 'Montaña (MTB)',
+        ...(fotoLimpia ? { foto: fotoLimpia } : {}),
+      };
+    })
     .filter((b) => b.marca !== '' || b.modelo !== '')
     .slice(0, MAX_BICICLETAS);
 }
@@ -166,6 +173,10 @@ export function crearSocio(usuario, datos, almacen = localStorage, funcionId = g
           .trim()
           .toUpperCase()
       : '',
+    fotoPerfil: String(datos?.fotoPerfil || '').trim(),
+    propietario: String(usuario || 'anonimo')
+      .trim()
+      .toLowerCase(),
     bicicletas: normalizarBicicletas(datos?.bicicletas),
     fechaAlta: datos?.fechaAlta || new Date().toISOString(),
   };
@@ -236,6 +247,10 @@ export function actualizarSocio(usuario, id, cambios, almacen = localStorage) {
           .trim()
           .toUpperCase()
       : '',
+    fotoPerfil:
+      cambios?.fotoPerfil !== undefined
+        ? String(cambios.fotoPerfil).trim()
+        : String(actual.fotoPerfil || ''),
     bicicletas:
       cambios?.bicicletas !== undefined
         ? normalizarBicicletas(cambios.bicicletas)
@@ -312,4 +327,57 @@ export function filtrarSocios(socios, termino) {
 
     return camposTexto.some((campo) => normalizarTextoBusqueda(campo).includes(busqueda));
   });
+}
+
+/**
+ * Obtiene todos los socios del club combinando la cuenta activa y las cuentas registradas
+ * cuando el usuario tiene rol de 'administrador'.
+ * @param {string} usuarioActivo Nombre del usuario con sesión activa.
+ * @param {string} [rol='usuario'] Rol de la sesión activa ('administrador' | 'usuario').
+ * @param {Array<string>} [nombresUsuarios=[]] Lista de nombres de usuarios registrados en el club.
+ * @param {Storage|Object} [almacen=localStorage]
+ * @returns {SocioCiclista[]}
+ */
+export function obtenerSociosVisibles(
+  usuarioActivo,
+  rol = 'usuario',
+  nombresUsuarios = [],
+  almacen = localStorage,
+) {
+  if (rol !== 'administrador') {
+    return obtenerSocios(usuarioActivo, almacen);
+  }
+
+  const cuentasUnicas = new Set([
+    String(usuarioActivo || '')
+      .trim()
+      .toLowerCase(),
+    ...nombresUsuarios.map((u) =>
+      String(u || '')
+        .trim()
+        .toLowerCase(),
+    ),
+  ]);
+
+  /** @type {SocioCiclista[]} */
+  const acumulados = [];
+  const idsVistos = new Set();
+
+  for (const cuenta of cuentasUnicas) {
+    if (!cuenta) {
+      continue;
+    }
+    const listaCuenta = obtenerSocios(cuenta, almacen);
+    for (const socio of listaCuenta) {
+      if (!idsVistos.has(socio.id)) {
+        idsVistos.add(socio.id);
+        acumulados.push({
+          ...socio,
+          propietario: socio.propietario || cuenta,
+        });
+      }
+    }
+  }
+
+  return acumulados;
 }

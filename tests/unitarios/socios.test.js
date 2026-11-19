@@ -11,6 +11,7 @@ import {
   eliminarSocio,
   normalizarTextoBusqueda,
   filtrarSocios,
+  obtenerSociosVisibles,
 } from '../../js/datos/socios.js';
 
 describe('Módulo de datos: Socios Ciclistas CRUD (con AlmacenFalso)', () => {
@@ -248,5 +249,39 @@ describe('Módulo de datos: Socios Ciclistas CRUD (con AlmacenFalso)', () => {
     );
     expect(obtenerSocios(usuarioActivo, almacen)).toEqual([{ id: '1', nombre: 'Socio Válido' }]);
     expect(normalizarBicicletas([{ marca: '', modelo: '' }, null])).toEqual([]);
+  });
+
+  it('permite al administrador ver todos los socios del club y guarda imágenes de perfil y bicicleta', () => {
+    const s1 = crearSocio(
+      'usuario_a',
+      {
+        nombre: 'Ciclista Uno',
+        dni: '12345678Z',
+        fotoPerfil: 'data:image/png;base64,AAA',
+        bicicletas: [{ marca: 'Trek', modelo: 'Madone', foto: 'data:image/png;base64,BBB' }],
+      },
+      almacen,
+    );
+    crearSocio('usuario_b', { nombre: 'Ciclista Dos', dni: '00000000T' }, almacen);
+
+    const mod = actualizarSocio(
+      'usuario_a',
+      s1.id,
+      { fotoPerfil: 'data:image/png;base64,CCC' },
+      almacen,
+    );
+    expect(mod.fotoPerfil).toBe('data:image/png;base64,CCC');
+    expect(mod.bicicletas[0].foto).toBe('data:image/png;base64,BBB');
+
+    const soloUsuarioA = obtenerSociosVisibles('usuario_a', 'usuario', ['usuario_b'], almacen);
+    expect(soloUsuarioA).toHaveLength(1);
+
+    const todosAdmin = obtenerSociosVisibles(
+      'admin',
+      'administrador',
+      ['usuario_a', 'usuario_b', ''],
+      almacen,
+    );
+    expect(todosAdmin).toHaveLength(2);
   });
 });

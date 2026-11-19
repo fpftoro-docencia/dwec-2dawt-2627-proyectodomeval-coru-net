@@ -1,15 +1,31 @@
 /**
  * @fileoverview Controlador para la página privada de listado de socios (`listado.html`).
  * HTML requerido: `#cuerpo-listado`, `#plantilla-fila-socio`, `#contenedor-tabla`,
- * `#estado-vacio`, `#campo-busqueda`, `#contador-resultados`, `#navegacion-paginacion`
- * y `#dialogo-confirmar-borrado`.
- * Genera filas mediante `<template>` y `textContent`, filtra con `debounce` ignorando tildes/mayúsculas,
- * pagina sincronizando `?pagina=X` en la URL y confirma bajas mediante `<dialog>` nativo.
+ * `#estado-vacio`, `#campo-busqueda`, `#contador-resultados`, `#navegacion-paginacion`,
+ * `#dialogo-confirmar-borrado` y `#seccion-quedadas` (mapa interactivo y rutas).
+ * Genera filas mediante `<template>` y `textContent`, muestra fotos de perfil y de bicicletas,
+ * permite al administrador ver todo el club y gestiona quedadas de rutas ciclistas con mapa SVG.
  * @module paginas/listado
  */
 
 import { protegerPaginaPrivada } from '../datos/sesion.js';
-import { obtenerSocios, eliminarSocio, filtrarSocios, crearSocio } from '../datos/socios.js';
+import { obtenerUsuarios } from '../datos/usuarios.js';
+import {
+  obtenerSocios,
+  obtenerSociosVisibles,
+  eliminarSocio,
+  filtrarSocios,
+  crearSocio,
+} from '../datos/socios.js';
+import {
+  ZONAS_MAPA_DISPONIBLES,
+  obtenerRutasQuedadas,
+  contarRutasDeSocio,
+  verificarPermisoDisenarRuta,
+  crearRutaQuedada,
+  alternarInscripcionRuta,
+  eliminarRutaQuedada,
+} from '../datos/rutas.js';
 import { paginar, ELEMENTOS_POR_PAGINA_DEFECTO } from '../logica/paginacion.js';
 import {
   leerPaginaUrl,
@@ -26,7 +42,18 @@ import {
 export const TIEMPO_DEBOUNCE_MS = 250;
 
 /**
- * Datos de demostración opcionales para probar rápidamente paginación y filtrado en el navegador.
+ * Genera una imagen SVG codificada como DataURL para avatares o ilustraciones de bicicletas de ejemplo.
+ * @param {string} texto
+ * @param {string} colorFondo
+ * @returns {string}
+ */
+function crearSvgDataUrl(texto, colorFondo = '#d90429') {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80"><rect width="120" height="80" fill="${colorFondo}"/><text x="60" y="46" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">${texto}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * Datos de demostración completos (con fotos de perfil y de bicicletas) para probar el club.
  */
 const SOCIOS_DEMOSTRACION = [
   {
@@ -37,9 +64,20 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 45,
     federado: true,
     licencia: 'ESP-ELI-2026-01',
+    fotoPerfil: crearSvgDataUrl('AV', '#d90429'),
     bicicletas: [
-      { marca: 'Specialized', modelo: 'S-Works Epic 8', disciplina: 'Montaña (MTB)' },
-      { marca: 'Specialized', modelo: 'Tarmac SL8', disciplina: 'Carretera' },
+      {
+        marca: 'Specialized',
+        modelo: 'S-Works Epic 8',
+        disciplina: 'Montaña (MTB)',
+        foto: crearSvgDataUrl('MTB', '#1a1a1d'),
+      },
+      {
+        marca: 'Specialized',
+        modelo: 'Tarmac SL8',
+        disciplina: 'Carretera',
+        foto: crearSvgDataUrl('SL8', '#d90429'),
+      },
     ],
   },
   {
@@ -50,7 +88,15 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 35,
     federado: true,
     licencia: 'ESP-M30-2026-14',
-    bicicletas: [{ marca: 'Orbea', modelo: 'Oiz M-Team', disciplina: 'Montaña (MTB)' }],
+    fotoPerfil: crearSvgDataUrl('SM', '#0f172a'),
+    bicicletas: [
+      {
+        marca: 'Orbea',
+        modelo: 'Oiz M-Team',
+        disciplina: 'Montaña (MTB)',
+        foto: crearSvgDataUrl('OIZ', '#0284c7'),
+      },
+    ],
   },
   {
     nombre: 'Martín Gómez Ibáñez',
@@ -60,7 +106,15 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 25,
     federado: true,
     licencia: 'ESP-S23-2026-08',
-    bicicletas: [{ marca: 'Canyon', modelo: 'Lux World Cup', disciplina: 'Montaña (MTB)' }],
+    fotoPerfil: crearSvgDataUrl('MG', '#15803d'),
+    bicicletas: [
+      {
+        marca: 'Canyon',
+        modelo: 'Lux World Cup',
+        disciplina: 'Montaña (MTB)',
+        foto: crearSvgDataUrl('LUX', '#334155'),
+      },
+    ],
   },
   {
     nombre: 'Elena Domínguez Ríos',
@@ -70,7 +124,15 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 35,
     federado: false,
     licencia: '',
-    bicicletas: [{ marca: 'Specialized', modelo: 'Diverge STR', disciplina: 'Gravel' }],
+    fotoPerfil: crearSvgDataUrl('ED', '#6d28d9'),
+    bicicletas: [
+      {
+        marca: 'Specialized',
+        modelo: 'Diverge STR',
+        disciplina: 'Gravel',
+        foto: crearSvgDataUrl('GRV', '#7c2d12'),
+      },
+    ],
   },
   {
     nombre: 'Javier Núñez Peñalver',
@@ -80,6 +142,7 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 20,
     federado: false,
     licencia: '',
+    fotoPerfil: crearSvgDataUrl('JN', '#475569'),
     bicicletas: [],
   },
   {
@@ -90,7 +153,15 @@ const SOCIOS_DEMOSTRACION = [
     cuota: 45,
     federado: true,
     licencia: 'ESP-ELI-2026-77',
-    bicicletas: [{ marca: 'Trek', modelo: 'Supercaliber SLR', disciplina: 'Montaña (MTB)' }],
+    fotoPerfil: crearSvgDataUrl('LF', '#be123c'),
+    bicicletas: [
+      {
+        marca: 'Trek',
+        modelo: 'Supercaliber SLR',
+        disciplina: 'Montaña (MTB)',
+        foto: crearSvgDataUrl('TRK', '#991b1b'),
+      },
+    ],
   },
 ];
 
@@ -145,7 +216,26 @@ function formatearResumenBicicletas(bicicletas) {
 }
 
 /**
- * Inicializa la página del listado de socios ciclistas.
+ * Extrae las iniciales de hasta 2 letras del nombre de un socio.
+ * @param {string} nombre
+ * @returns {string}
+ */
+function obtenerIniciales(nombre) {
+  const partes = String(nombre || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (partes.length === 0) {
+    return 'CC';
+  }
+  if (partes.length === 1) {
+    return partes[0].slice(0, 2).toUpperCase();
+  }
+  return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+}
+
+/**
+ * Inicializa la página del listado de socios ciclistas y el organizador de quedadas con mapa.
  * @param {Location} [navegacion=window.location]
  * @fires CustomEvent#aviso
  * @listens HTMLInputElement#input
@@ -170,6 +260,7 @@ export function inicializarPaginaListado(navegacion = window.location) {
   const tituloVacio = document.getElementById('titulo-vacio');
   const mensajeVacio = document.getElementById('mensaje-vacio');
   const botonCargarEjemplos = document.getElementById('boton-cargar-ejemplos');
+  const botonCargarEjemplosBarra = document.getElementById('boton-cargar-ejemplos-barra');
   const campoBusqueda = /** @type {HTMLInputElement | null} */ (
     document.getElementById('campo-busqueda')
   );
@@ -183,6 +274,45 @@ export function inicializarPaginaListado(navegacion = window.location) {
   const botonCancelarBorrado = document.getElementById('boton-cancelar-borrado');
   const botonConfirmarBorrado = document.getElementById('boton-confirmar-borrado');
 
+  // Elementos de la sección de Quedadas y Rutas con Mapa
+  const formularioQuedada = /** @type {HTMLFormElement | null} */ (
+    document.getElementById('formulario-quedada')
+  );
+  const campoSocioRuta = /** @type {HTMLSelectElement | null} */ (
+    document.getElementById('campo-socio-ruta')
+  );
+  const estadoLimiteSocioRuta = document.getElementById('estado-limite-socio-ruta');
+  const campoTituloRuta = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-titulo-ruta')
+  );
+  const campoZonaMapa = /** @type {HTMLSelectElement | null} */ (
+    document.getElementById('campo-zona-mapa')
+  );
+  const campoFechaRuta = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-fecha-ruta')
+  );
+  const campoKilometrosRuta = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-kilometros-ruta')
+  );
+  const campoDesnivelRuta = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('campo-desnivel-ruta')
+  );
+  const botonReiniciarTrazado = document.getElementById('boton-reiniciar-trazado');
+  const mapaInteractivoRuta = document.getElementById('mapa-interactivo-ruta');
+  const polilineaMapaRuta = document.getElementById('polilinea-mapa-ruta');
+  const grupoPuntosMapa = document.getElementById('grupo-puntos-mapa');
+  const etiquetaSectorMapa = document.getElementById('etiqueta-sector-mapa');
+  const etiquetaKmMapa = document.getElementById('etiqueta-km-mapa');
+  const botonCrearQuedada = /** @type {HTMLButtonElement | null} */ (
+    document.getElementById('boton-crear-quedada')
+  );
+  const contenedorQuedadas = document.getElementById('contenedor-quedadas');
+  const estadoVacioQuedadas = document.getElementById('estado-vacio-quedadas');
+  const contadorQuedadas = document.getElementById('contador-quedadas');
+  const plantillaTarjetaQuedada = /** @type {HTMLTemplateElement | null} */ (
+    document.getElementById('plantilla-tarjeta-quedada')
+  );
+
   let paginaSolicitada = leerPaginaUrl(navegacion);
   let terminoBusqueda = '';
   /** @type {number | null} */
@@ -190,8 +320,24 @@ export function inicializarPaginaListado(navegacion = window.location) {
   /** @type {Object | null} */
   let socioPendienteBorrado = null;
 
+  /** @type {Array<Object>} */
+  let puntosTrazadoActual = [...ZONAS_MAPA_DISPONIBLES['alpes-innsbruck'].puntos];
+  let modoTrazoPersonalizado = false;
+
   /**
-   * Construye una fila a partir del `<template>` usando únicamente `textContent`.
+   * Obtiene los socios visibles para la sesión actual (todos si es administrador, o los propios si es usuario).
+   * @returns {Array<Object>}
+   */
+  function leerSociosDisponibles() {
+    if (sesion.rol === 'administrador') {
+      const cuentas = obtenerUsuarios().map((u) => u.usuario);
+      return obtenerSociosVisibles(sesion.usuario, sesion.rol, cuentas);
+    }
+    return obtenerSocios(sesion.usuario);
+  }
+
+  /**
+   * Construye una fila a partir del `<template>` usando `textContent` e imágenes de perfil/bicicleta.
    * @param {Object} socio
    * @returns {DocumentFragment | null}
    */
@@ -201,12 +347,22 @@ export function inicializarPaginaListado(navegacion = window.location) {
     }
     const clon = /** @type {DocumentFragment} */ (plantillaFila.content.cloneNode(true));
 
+    const fotoSocio = /** @type {HTMLImageElement | null} */ (
+      clon.querySelector('.foto-socio-fila')
+    );
+    const avatarIniciales = /** @type {HTMLElement | null} */ (
+      clon.querySelector('.avatar-socio-iniciales')
+    );
     const celdaNombre = clon.querySelector('.celda-nombre');
     const celdaDni = clon.querySelector('.celda-dni');
+    const celdaPropietario = /** @type {HTMLElement | null} */ (
+      clon.querySelector('.celda-propietario')
+    );
     const celdaCategoria = clon.querySelector('.celda-categoria');
     const celdaFederado = clon.querySelector('.celda-federado');
     const celdaLicencia = clon.querySelector('.celda-licencia');
     const celdaCuota = clon.querySelector('.celda-cuota');
+    const galeriaFotosBicis = clon.querySelector('.galeria-fotos-bicis');
     const celdaBicicletas = clon.querySelector('.celda-bicicletas');
     const enlaceEditar = /** @type {HTMLAnchorElement | null} */ (
       clon.querySelector('.enlace-editar')
@@ -215,11 +371,23 @@ export function inicializarPaginaListado(navegacion = window.location) {
       clon.querySelector('.boton-borrar')
     );
 
+    if (socio.fotoPerfil && fotoSocio && avatarIniciales) {
+      fotoSocio.src = socio.fotoPerfil;
+      fotoSocio.hidden = false;
+      avatarIniciales.hidden = true;
+    } else if (avatarIniciales) {
+      avatarIniciales.textContent = obtenerIniciales(socio.nombre);
+    }
+
     if (celdaNombre) {
       celdaNombre.textContent = socio.nombre;
     }
     if (celdaDni) {
       celdaDni.textContent = `DNI: ${socio.dni}`;
+    }
+    if (celdaPropietario && sesion.rol === 'administrador' && socio.propietario) {
+      celdaPropietario.hidden = false;
+      celdaPropietario.textContent = `Cuenta: ${socio.propietario}`;
     }
     if (celdaCategoria) {
       celdaCategoria.textContent = socio.categoria;
@@ -234,6 +402,18 @@ export function inicializarPaginaListado(navegacion = window.location) {
     }
     if (celdaCuota) {
       celdaCuota.textContent = `${socio.cuota} €/mes`;
+    }
+    if (galeriaFotosBicis && Array.isArray(socio.bicicletas)) {
+      for (const bici of socio.bicicletas) {
+        if (bici.foto) {
+          const miniatura = document.createElement('img');
+          miniatura.src = bici.foto;
+          miniatura.alt = `${bici.marca} ${bici.modelo}`;
+          miniatura.title = `${bici.marca} ${bici.modelo} (${bici.disciplina})`;
+          miniatura.className = 'miniatura-bici-fila';
+          galeriaFotosBicis.append(miniatura);
+        }
+      }
     }
     if (celdaBicicletas) {
       celdaBicicletas.textContent = formatearResumenBicicletas(socio.bicicletas);
@@ -257,11 +437,237 @@ export function inicializarPaginaListado(navegacion = window.location) {
   }
 
   /**
+   * Renderiza el trazado GPS y los puntos sobre el SVG interactivo del mapa.
+   */
+  function pintarMapaInteractivo() {
+    if (!polilineaMapaRuta || !grupoPuntosMapa) {
+      return;
+    }
+    const cadenaPuntos = puntosTrazadoActual.map((p) => `${p.x},${p.y}`).join(' ');
+    polilineaMapaRuta.setAttribute('points', cadenaPuntos);
+    grupoPuntosMapa.replaceChildren();
+
+    puntosTrazadoActual.forEach((punto, idx) => {
+      const circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circulo.setAttribute('cx', String(punto.x));
+      circulo.setAttribute('cy', String(punto.y));
+      circulo.setAttribute('r', idx === 0 || idx === puntosTrazadoActual.length - 1 ? '6' : '4');
+      circulo.setAttribute(
+        'fill',
+        idx === 0 ? '#22c55e' : idx === puntosTrazadoActual.length - 1 ? '#facc15' : '#ffffff',
+      );
+      circulo.setAttribute('stroke', '#0f172a');
+      circulo.setAttribute('stroke-width', '2');
+      grupoPuntosMapa.append(circulo);
+    });
+
+    if (etiquetaSectorMapa && campoZonaMapa) {
+      const info =
+        ZONAS_MAPA_DISPONIBLES[campoZonaMapa.value] || ZONAS_MAPA_DISPONIBLES['alpes-innsbruck'];
+      etiquetaSectorMapa.textContent = `SECTOR: ${info.nombre.toUpperCase()}`;
+    }
+
+    if (etiquetaKmMapa && campoKilometrosRuta && campoDesnivelRuta) {
+      etiquetaKmMapa.textContent = `${campoKilometrosRuta.value || 0} km · ${campoDesnivelRuta.value || 0} m+`;
+    }
+  }
+
+  /**
+   * Actualiza el selector de socio diseñador y el aviso sobre el límite de 1 ruta para no federados.
+   */
+  function actualizarSelectorSociosParaRuta() {
+    if (!campoSocioRuta) {
+      return;
+    }
+    const sociosDisponibles = leerSociosDisponibles();
+    const valorPrevio = campoSocioRuta.value;
+    campoSocioRuta.replaceChildren();
+
+    if (sociosDisponibles.length === 0) {
+      const optVacia = document.createElement('option');
+      optVacia.value = '';
+      optVacia.textContent = 'Registra o carga antes un socio ciclista...';
+      campoSocioRuta.append(optVacia);
+      if (estadoLimiteSocioRuta) {
+        estadoLimiteSocioRuta.textContent =
+          'Crea un socio o pulsa «+ Cargar Socios Demo» para empezar a diseñar rutas.';
+      }
+      if (botonCrearQuedada) {
+        botonCrearQuedada.disabled = true;
+      }
+      return;
+    }
+
+    for (const socio of sociosDisponibles) {
+      const rutasCreadas = contarRutasDeSocio(socio.id);
+      const opt = document.createElement('option');
+      opt.value = socio.id;
+      const etiquetaFed = socio.federado
+        ? `FEDERADO · Rutas ilimitadas (${rutasCreadas} creadas)`
+        : `NO FEDERADO · ${rutasCreadas}/1 ruta permitida`;
+      opt.textContent = `${socio.nombre} [${etiquetaFed}]`;
+      campoSocioRuta.append(opt);
+    }
+
+    if (valorPrevio && sociosDisponibles.some((s) => s.id === valorPrevio)) {
+      campoSocioRuta.value = valorPrevio;
+    }
+
+    const socioSeleccionado =
+      sociosDisponibles.find((s) => s.id === campoSocioRuta.value) || sociosDisponibles[0];
+
+    if (!socioSeleccionado) {
+      return;
+    }
+
+    const numRutas = contarRutasDeSocio(socioSeleccionado.id);
+    const permiso = verificarPermisoDisenarRuta({
+      socioFederado: Boolean(socioSeleccionado.federado),
+      rutasExistentesSocio: numRutas,
+    });
+
+    if (estadoLimiteSocioRuta) {
+      if (!permiso.permitido) {
+        estadoLimiteSocioRuta.className = 'small mt-1 fw-bold text-danger';
+        estadoLimiteSocioRuta.textContent = `⚠️ ${permiso.motivo}`;
+      } else if (socioSeleccionado.federado) {
+        estadoLimiteSocioRuta.className = 'small mt-1 fw-semibold text-success';
+        estadoLimiteSocioRuta.textContent = `✅ Socio federado (${socioSeleccionado.licencia || 'con licencia'}): puede diseñar rutas ilimitadas (${numRutas} diseñadas).`;
+      } else {
+        estadoLimiteSocioRuta.className = 'small mt-1 fw-semibold text-secondary';
+        estadoLimiteSocioRuta.textContent = `ℹ️ Socio no federado: puede diseñar 1 única ruta (${numRutas}/1 utilizada).`;
+      }
+    }
+
+    if (botonCrearQuedada) {
+      botonCrearQuedada.disabled = false;
+    }
+  }
+
+  /**
+   * Renderiza el listado de tarjetas de quedadas convocadas.
+   */
+  function renderizarQuedadas() {
+    if (!contenedorQuedadas || !plantillaTarjetaQuedada) {
+      return;
+    }
+    const todasLasRutas = obtenerRutasQuedadas();
+    contenedorQuedadas.replaceChildren();
+
+    if (contadorQuedadas) {
+      const plural = todasLasRutas.length === 1 ? 'ruta activa' : 'rutas activas';
+      contadorQuedadas.textContent = `${todasLasRutas.length} ${plural}`;
+    }
+
+    if (todasLasRutas.length === 0) {
+      if (estadoVacioQuedadas) {
+        estadoVacioQuedadas.hidden = false;
+      }
+      return;
+    }
+
+    if (estadoVacioQuedadas) {
+      estadoVacioQuedadas.hidden = true;
+    }
+
+    for (const ruta of todasLasRutas) {
+      const clon = /** @type {DocumentFragment} */ (
+        plantillaTarjetaQuedada.content.cloneNode(true)
+      );
+      const trazadoMini = clon.querySelector('.trazado-mini-mapa');
+      const tituloEl = clon.querySelector('.titulo-quedada');
+      const kmEl = clon.querySelector('.km-quedada');
+      const metaEl = clon.querySelector('.meta-quedada');
+      const desnivelEl = clon.querySelector('.desnivel-quedada');
+      const dificultadEl = clon.querySelector('.dificultad-quedada');
+      const autorFederadoEl = clon.querySelector('.autor-federado-quedada');
+      const participantesEl = clon.querySelector('.participantes-quedada');
+      const botonApuntarse = /** @type {HTMLButtonElement | null} */ (
+        clon.querySelector('.boton-apuntarse-ruta')
+      );
+      const botonBorrarRuta = /** @type {HTMLButtonElement | null} */ (
+        clon.querySelector('.boton-borrar-ruta')
+      );
+
+      if (trazadoMini && Array.isArray(ruta.puntosMapa)) {
+        trazadoMini.setAttribute('points', ruta.puntosMapa.map((p) => `${p.x},${p.y}`).join(' '));
+      }
+      if (tituloEl) {
+        tituloEl.textContent = ruta.titulo;
+      }
+      if (kmEl) {
+        kmEl.textContent = `${ruta.kilometros} km`;
+      }
+      if (metaEl) {
+        const infoZona = ZONAS_MAPA_DISPONIBLES[ruta.zonaMapa];
+        const nombreZona = infoZona ? infoZona.nombre : ruta.zonaMapa;
+        metaEl.textContent = `📍 ${nombreZona} · 📅 ${ruta.fecha} · Diseñada por ${ruta.socioNombre}`;
+      }
+      if (desnivelEl) {
+        desnivelEl.textContent = `⛰️ ${ruta.desnivel} m+`;
+      }
+      if (dificultadEl) {
+        dificultadEl.textContent = `Nivel: ${ruta.dificultad}`;
+      }
+      if (autorFederadoEl) {
+        autorFederadoEl.textContent = ruta.socioFederado
+          ? 'Autor Federado'
+          : 'Autor No Federado (1/1)';
+        autorFederadoEl.classList.add(
+          ruta.socioFederado ? 'bg-success' : 'bg-warning',
+          'text-dark',
+        );
+        if (ruta.socioFederado) {
+          autorFederadoEl.classList.remove('text-dark');
+        }
+      }
+
+      const listaParticipantes = Array.isArray(ruta.participantes) ? ruta.participantes : [];
+      if (participantesEl) {
+        participantesEl.textContent = `🚴 Apuntados (${listaParticipantes.length}): ${listaParticipantes.join(', ')}`;
+      }
+
+      if (botonApuntarse) {
+        const yaApuntado = listaParticipantes.some(
+          (p) => p.toLowerCase() === sesion.usuario.toLowerCase(),
+        );
+        botonApuntarse.textContent = yaApuntado ? 'Desapuntarme' : 'Apuntarme a la ruta';
+        botonApuntarse.addEventListener('click', () => {
+          alternarInscripcionRuta(ruta.id, sesion.usuario);
+          renderizarQuedadas();
+        });
+      }
+
+      if (botonBorrarRuta) {
+        const puedeBorrar =
+          sesion.rol === 'administrador' || ruta.creadorUsuario === sesion.usuario.toLowerCase();
+        botonBorrarRuta.hidden = !puedeBorrar;
+        botonBorrarRuta.addEventListener('click', () => {
+          try {
+            eliminarRutaQuedada(ruta.id, sesion.usuario, sesion.rol);
+            actualizarSelectorSociosParaRuta();
+            renderizarQuedadas();
+            emitirAviso(document.body, `La quedada «${ruta.titulo}» ha sido eliminada.`, 'exito');
+          } catch (error) {
+            emitirAviso(
+              document.body,
+              error instanceof Error ? error.message : 'No se pudo borrar la ruta.',
+              'error',
+            );
+          }
+        });
+      }
+
+      contenedorQuedadas.append(clon);
+    }
+  }
+
+  /**
    * Renderiza la tabla, el contador, el estado vacío y la barra de paginación.
    * @param {boolean} [actualizarUrl=true]
    */
   function renderizarListado(actualizarUrl = true) {
-    const todosLosSocios = obtenerSocios(sesion.usuario);
+    const todosLosSocios = leerSociosDisponibles();
     const sociosFiltrados = filtrarSocios(todosLosSocios, terminoBusqueda);
     const estadoPag = paginar(sociosFiltrados, paginaSolicitada, ELEMENTOS_POR_PAGINA_DEFECTO);
 
@@ -332,6 +738,9 @@ export function inicializarPaginaListado(navegacion = window.location) {
       paginaSolicitada = nuevaPagina;
       renderizarListado(true);
     });
+
+    actualizarSelectorSociosParaRuta();
+    renderizarQuedadas();
   }
 
   // Buscador con debounce que reinicia a la página 1 (Requisito 14 y 15)
@@ -362,8 +771,9 @@ export function inicializarPaginaListado(navegacion = window.location) {
         cerrarDialogoModal(dialogoBorrado);
         return;
       }
-      const { id, nombre } = socioPendienteBorrado;
-      const borrado = eliminarSocio(sesion.usuario, id);
+      const { id, nombre, propietario } = socioPendienteBorrado;
+      const cuentaObjetivo = propietario || sesion.usuario;
+      const borrado = eliminarSocio(cuentaObjetivo, id);
       socioPendienteBorrado = null;
       cerrarDialogoModal(dialogoBorrado);
 
@@ -378,26 +788,201 @@ export function inicializarPaginaListado(navegacion = window.location) {
     });
   }
 
-  // Botón opcional para cargar socios de demostración cuando la lista está vacía
-  if (botonCargarEjemplos) {
-    botonCargarEjemplos.addEventListener('click', () => {
-      for (const datosDemo of SOCIOS_DEMOSTRACION) {
+  /**
+   * Carga los 6 socios de demostración (con fotos de perfil y bicicletas) y 2 quedadas iniciales.
+   */
+  function cargarDatosDemostracion() {
+    for (const datosDemo of SOCIOS_DEMOSTRACION) {
+      try {
+        crearSocio(sesion.usuario, datosDemo);
+      } catch {
+        // Ignorar si ya existe alguno con ese DNI
+      }
+    }
+
+    const sociosActuales = leerSociosDisponibles();
+    const socioFederadoDemo = sociosActuales.find((s) => s.federado);
+    const socioNoFederadoDemo = sociosActuales.find((s) => !s.federado);
+
+    if (obtenerRutasQuedadas().length === 0) {
+      if (socioFederadoDemo) {
         try {
-          crearSocio(sesion.usuario, datosDemo);
+          crearRutaQuedada({
+            titulo: 'Ascensión Reina al Paso del Brenner',
+            fecha: '2026-11-29',
+            kilometros: 92,
+            desnivel: 2150,
+            zonaMapa: 'alpes-innsbruck',
+            socioId: socioFederadoDemo.id,
+            socioNombre: socioFederadoDemo.nombre,
+            socioFederado: true,
+            creadorUsuario: sesion.usuario,
+          });
         } catch {
-          // Ignorar si ya existe alguno con ese DNI
+          // Ignorar si ya existe
         }
       }
-      paginaSolicitada = 1;
-      renderizarListado(true);
-      emitirAviso(
-        document.body,
-        'Se han cargado 6 socios ciclistas de demostración en el club.',
-        'exito',
-      );
+      if (socioNoFederadoDemo) {
+        try {
+          crearRutaQuedada({
+            titulo: 'Salida Cicloturista Puerto de Navacerrada',
+            fecha: '2026-12-06',
+            kilometros: 54,
+            desnivel: 980,
+            zonaMapa: 'guadarrama-madrid',
+            socioId: socioNoFederadoDemo.id,
+            socioNombre: socioNoFederadoDemo.nombre,
+            socioFederado: false,
+            creadorUsuario: sesion.usuario,
+          });
+        } catch {
+          // Ignorar si ya alcanzó el límite
+        }
+      }
+    }
+
+    paginaSolicitada = 1;
+    renderizarListado(true);
+    emitirAviso(
+      document.body,
+      'Se han cargado 6 socios ciclistas (con fotos de perfil y bicicletas) y las quedadas de ejemplo.',
+      'exito',
+    );
+  }
+
+  if (botonCargarEjemplos) {
+    botonCargarEjemplos.addEventListener('click', cargarDatosDemostracion);
+  }
+  if (botonCargarEjemplosBarra) {
+    botonCargarEjemplosBarra.addEventListener('click', cargarDatosDemostracion);
+  }
+
+  // Eventos del diseñador de Quedadas y Mapa Interactivo
+  if (campoSocioRuta) {
+    campoSocioRuta.addEventListener('change', () => {
+      actualizarSelectorSociosParaRuta();
     });
   }
 
+  if (campoZonaMapa) {
+    campoZonaMapa.addEventListener('change', () => {
+      const info =
+        ZONAS_MAPA_DISPONIBLES[campoZonaMapa.value] || ZONAS_MAPA_DISPONIBLES['alpes-innsbruck'];
+      puntosTrazadoActual = [...info.puntos];
+      modoTrazoPersonalizado = false;
+      if (campoKilometrosRuta) {
+        campoKilometrosRuta.value = String(info.kmRecomendados);
+      }
+      if (campoDesnivelRuta) {
+        campoDesnivelRuta.value = String(info.desnivel);
+      }
+      pintarMapaInteractivo();
+    });
+  }
+
+  if (campoKilometrosRuta) {
+    campoKilometrosRuta.addEventListener('input', pintarMapaInteractivo);
+  }
+  if (campoDesnivelRuta) {
+    campoDesnivelRuta.addEventListener('input', pintarMapaInteractivo);
+  }
+
+  if (mapaInteractivoRuta) {
+    mapaInteractivoRuta.addEventListener('click', (evento) => {
+      const rect = mapaInteractivoRuta.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        return;
+      }
+      const x = Math.round(((evento.clientX - rect.left) / rect.width) * 540);
+      const y = Math.round(((evento.clientY - rect.top) / rect.height) * 220);
+
+      if (!modoTrazoPersonalizado) {
+        puntosTrazadoActual = [{ x, y }];
+        modoTrazoPersonalizado = true;
+      } else {
+        puntosTrazadoActual.push({ x, y });
+      }
+
+      if (puntosTrazadoActual.length >= 2 && campoKilometrosRuta) {
+        let distanciaPx = 0;
+        for (let i = 1; i < puntosTrazadoActual.length; i += 1) {
+          const dx = puntosTrazadoActual[i].x - puntosTrazadoActual[i - 1].x;
+          const dy = puntosTrazadoActual[i].y - puntosTrazadoActual[i - 1].y;
+          distanciaPx += Math.hypot(dx, dy);
+        }
+        const kmCalculados = Math.max(10, Math.min(340, Math.round(distanciaPx * 0.22)));
+        campoKilometrosRuta.value = String(kmCalculados);
+      }
+      pintarMapaInteractivo();
+    });
+  }
+
+  if (botonReiniciarTrazado) {
+    botonReiniciarTrazado.addEventListener('click', () => {
+      const zona = campoZonaMapa ? campoZonaMapa.value : 'alpes-innsbruck';
+      const info = ZONAS_MAPA_DISPONIBLES[zona] || ZONAS_MAPA_DISPONIBLES['alpes-innsbruck'];
+      puntosTrazadoActual = [...info.puntos];
+      modoTrazoPersonalizado = false;
+      if (campoKilometrosRuta) {
+        campoKilometrosRuta.value = String(info.kmRecomendados);
+      }
+      if (campoDesnivelRuta) {
+        campoDesnivelRuta.value = String(info.desnivel);
+      }
+      pintarMapaInteractivo();
+    });
+  }
+
+  if (formularioQuedada) {
+    formularioQuedada.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const sociosDisponibles = leerSociosDisponibles();
+      const socioAutor = sociosDisponibles.find((s) => s.id === campoSocioRuta?.value);
+
+      if (!socioAutor) {
+        emitirAviso(
+          formularioQuedada,
+          'Selecciona un socio ciclista válido antes de diseñar la ruta.',
+          'error',
+        );
+        return;
+      }
+
+      try {
+        const rutaCreada = crearRutaQuedada({
+          titulo: campoTituloRuta?.value || '',
+          fecha: campoFechaRuta?.value || '2026-11-29',
+          kilometros: Number(campoKilometrosRuta?.value || 0),
+          desnivel: Number(campoDesnivelRuta?.value || 0),
+          zonaMapa: campoZonaMapa?.value || 'alpes-innsbruck',
+          puntosMapa: puntosTrazadoActual.length >= 2 ? puntosTrazadoActual : undefined,
+          socioId: socioAutor.id,
+          socioNombre: socioAutor.nombre,
+          socioFederado: Boolean(socioAutor.federado),
+          creadorUsuario: sesion.usuario,
+        });
+
+        if (campoTituloRuta) {
+          campoTituloRuta.value = '';
+        }
+        actualizarSelectorSociosParaRuta();
+        renderizarQuedadas();
+        emitirAviso(
+          formularioQuedada,
+          `Quedada «${rutaCreada.titulo}» (${rutaCreada.kilometros} km) publicada con éxito en el club.`,
+          'exito',
+        );
+      } catch (error) {
+        emitirAviso(
+          formularioQuedada,
+          error instanceof Error ? error.message : 'No se pudo publicar la quedada.',
+          'error',
+        );
+      }
+    });
+  }
+
+  pintarMapaInteractivo();
   renderizarListado(true);
 }
 

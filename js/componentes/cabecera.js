@@ -40,6 +40,9 @@ export function inicializarCabecera(
         <a href="listado.html" class="nav-link-custom ${paginaActiva === 'listado.html' ? 'active' : ''}">
           Listado de Socios
         </a>
+        <a href="listado.html#seccion-quedadas" class="nav-link-custom">
+          Quedadas y Rutas
+        </a>
         <a href="ficha.html" class="nav-link-custom ${paginaActiva === 'ficha.html' ? 'active' : ''}">
           Nueva Ficha
         </a>

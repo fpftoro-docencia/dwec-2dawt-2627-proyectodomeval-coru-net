@@ -152,4 +152,67 @@ describe('Integración en Happy-DOM: Página de Listado (listado.html)', () => {
     expect(document.getElementById('estado-vacio').hidden).toBe(false);
     expect(document.getElementById('contenedor-avisos').textContent).toContain('Carlos Sastre');
   });
+
+  it('permite diseñar quedadas con mapa y kilómetros limitando a 1 ruta a los socios no federados', () => {
+    iniciarSesion({ usuario: usuarioActivo, rol: 'administrador' });
+    const socioNoFed = crearSocio(usuarioActivo, {
+      nombre: 'Elena No Federada',
+      dni: '22222222J',
+      categoria: 'Cicloturista',
+      cuota: 25,
+      federado: false,
+    });
+    const socioFed = crearSocio(usuarioActivo, {
+      nombre: 'Álvaro Federado',
+      dni: '12345678Z',
+      categoria: 'Élite',
+      cuota: 45,
+      federado: true,
+      licencia: 'ESP-ELI-01',
+    });
+
+    const navegacionFalsa = {
+      replace: vi.fn(),
+      pathname: '/listado.html',
+      search: '',
+      hash: '',
+    };
+
+    inicializarPaginaListado(navegacionFalsa);
+
+    const selectSocio = document.getElementById('campo-socio-ruta');
+    const campoTitulo = document.getElementById('campo-titulo-ruta');
+    const campoKm = document.getElementById('campo-kilometros-ruta');
+    const formQuedada = document.getElementById('formulario-quedada');
+
+    // 1. Elena (no federada) diseña su primera ruta
+    selectSocio.value = socioNoFed.id;
+    selectSocio.dispatchEvent(new Event('change'));
+    escribir(campoTitulo, 'Ruta Cicloturista Sierra');
+    escribir(campoKm, '65');
+    formQuedada.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(document.querySelectorAll('.tarjeta-quedada')).toHaveLength(1);
+    expect(document.getElementById('estado-limite-socio-ruta').textContent).toContain(
+      'solo pueden diseñar 1 ruta',
+    );
+
+    // 2. Elena intenta diseñar una segunda ruta -> se rechaza con aviso
+    escribir(campoTitulo, 'Segunda Ruta Prohibida');
+    formQuedada.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(document.querySelectorAll('.tarjeta-quedada')).toHaveLength(1);
+    expect(document.getElementById('contenedor-avisos').textContent).toContain(
+      'solo pueden diseñar 1 ruta',
+    );
+
+    // 3. Álvaro (federado) diseña dos rutas seguidas sin límite
+    selectSocio.value = socioFed.id;
+    selectSocio.dispatchEvent(new Event('change'));
+    escribir(campoTitulo, 'Etapa Reina Federada 1');
+    formQuedada.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    escribir(campoTitulo, 'Etapa Reina Federada 2');
+    formQuedada.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(document.querySelectorAll('.tarjeta-quedada')).toHaveLength(3);
+  });
 });

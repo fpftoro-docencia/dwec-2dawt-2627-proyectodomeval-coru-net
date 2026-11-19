@@ -45,6 +45,44 @@
 
               <form id="formulario-ficha" novalidate>
                 <div class="row g-3">
+                  <!-- 0. Foto de perfil del socio ciclista -->
+                  <div class="col-12">
+                    <div
+                      class="p-3 bg-light rounded border d-flex flex-wrap align-items-center gap-3"
+                    >
+                      <div class="contenedor-avatar-ficha">
+                        <img
+                          id="vista-previa-perfil"
+                          class="avatar-ficha-img"
+                          alt="Vista previa de foto de perfil del socio"
+                          hidden
+                        />
+                        <div
+                          id="avatar-iniciales-ficha"
+                          class="avatar-ficha-placeholder"
+                          aria-hidden="true"
+                        >
+                          🚴
+                        </div>
+                      </div>
+                      <div class="flex-grow-1">
+                        <label for="campo-foto-perfil" class="form-label fw-bold mb-1">
+                          Fotografía de perfil del socio (opcional)
+                        </label>
+                        <input
+                          type="file"
+                          id="campo-foto-perfil"
+                          accept="image/*"
+                          class="form-control form-control-sm"
+                        />
+                        <small class="text-muted d-block mt-1">
+                          Sube una imagen (JPG, PNG o WebP) para mostrar en tu carnet y ficha del
+                          club.
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- 1. Nombre completo -->
                   <div class="col-md-7">
                     <label for="campo-nombre" class="form-label">Nombre y apellidos</label>
@@ -247,6 +285,26 @@
               <option value="Gravel">Gravel</option>
               <option value="Enduro / DH">Enduro / DH</option>
             </select>
+          </div>
+          <div class="col-12 mt-2">
+            <div class="d-flex flex-wrap align-items-center gap-3 pt-2 border-top">
+              <img
+                class="vista-previa-bici rounded border"
+                alt="Vista previa de la bicicleta"
+                style="width: 72px; height: 48px; object-fit: cover"
+                hidden
+              />
+              <div class="flex-grow-1">
+                <label class="form-label small fw-bold mb-1 label-bici-foto">
+                  Fotografía de la bicicleta (opcional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="form-control form-control-sm input-bici-foto"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </fieldset>
