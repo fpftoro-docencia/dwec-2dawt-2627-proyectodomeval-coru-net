@@ -57,8 +57,8 @@ jobs:
       - name: Instalar dependencias limpias
         run: npm ci
 
-      - name: Instalar navegador Chromium para Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Instalar motores Chromium, Firefox y WebKit para Playwright
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Ejecutar prueba de humo contra la web desplegada en Vercel
         env:
