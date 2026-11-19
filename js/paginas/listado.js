@@ -303,6 +303,7 @@ export function inicializarPaginaListado(navegacion = window.location) {
   const grupoPuntosMapa = document.getElementById('grupo-puntos-mapa');
   const etiquetaSectorMapa = document.getElementById('etiqueta-sector-mapa');
   const etiquetaKmMapa = document.getElementById('etiqueta-km-mapa');
+  const avisoQuedadaLocal = document.getElementById('aviso-quedada-local');
   const botonCrearQuedada = /** @type {HTMLButtonElement | null} */ (
     document.getElementById('boton-crear-quedada')
   );
@@ -570,7 +571,9 @@ export function inicializarPaginaListado(navegacion = window.location) {
       estadoVacioQuedadas.hidden = true;
     }
 
-    for (const ruta of todasLasRutas) {
+    const rutasOrdenadas = [...todasLasRutas].reverse();
+
+    for (const ruta of rutasOrdenadas) {
       const clon = /** @type {DocumentFragment} */ (
         plantillaTarjetaQuedada.content.cloneNode(true)
       );
@@ -933,6 +936,22 @@ export function inicializarPaginaListado(navegacion = window.location) {
     });
   }
 
+  /**
+   * Muestra un aviso inmediato justo encima del botón de publicar quedada además del aviso global.
+   * @param {string} mensaje
+   * @param {'success' | 'danger'} tipo
+   */
+  function mostrarAvisoLocalQuedada(mensaje, tipo) {
+    if (!avisoQuedadaLocal) {
+      return;
+    }
+    avisoQuedadaLocal.replaceChildren();
+    const div = document.createElement('div');
+    div.className = `alert alert-${tipo} py-2 px-3 small fw-semibold mb-2`;
+    div.textContent = mensaje;
+    avisoQuedadaLocal.append(div);
+  }
+
   if (formularioQuedada) {
     formularioQuedada.addEventListener('submit', (evento) => {
       evento.preventDefault();
@@ -940,21 +959,25 @@ export function inicializarPaginaListado(navegacion = window.location) {
       const socioAutor = sociosDisponibles.find((s) => s.id === campoSocioRuta?.value);
 
       if (!socioAutor) {
-        emitirAviso(
-          formularioQuedada,
-          'Selecciona un socio ciclista válido antes de diseñar la ruta.',
-          'error',
-        );
+        const msg = 'Selecciona un socio ciclista válido antes de diseñar la ruta.';
+        mostrarAvisoLocalQuedada(msg, 'danger');
+        emitirAviso(formularioQuedada, msg, 'error');
         return;
       }
 
+      const claveZona = campoZonaMapa?.value || 'alpes-innsbruck';
+      const infoZona =
+        ZONAS_MAPA_DISPONIBLES[claveZona] || ZONAS_MAPA_DISPONIBLES['alpes-innsbruck'];
+      const tituloEscrito = String(campoTituloRuta?.value || '').trim();
+      const tituloFinal = tituloEscrito || `Quedada Oficial · ${infoZona.nombre}`;
+
       try {
         const rutaCreada = crearRutaQuedada({
-          titulo: campoTituloRuta?.value || '',
+          titulo: tituloFinal,
           fecha: campoFechaRuta?.value || '2026-11-29',
           kilometros: Number(campoKilometrosRuta?.value || 0),
           desnivel: Number(campoDesnivelRuta?.value || 0),
-          zonaMapa: campoZonaMapa?.value || 'alpes-innsbruck',
+          zonaMapa: claveZona,
           puntosMapa: puntosTrazadoActual.length >= 2 ? puntosTrazadoActual : undefined,
           socioId: socioAutor.id,
           socioNombre: socioAutor.nombre,
@@ -967,17 +990,13 @@ export function inicializarPaginaListado(navegacion = window.location) {
         }
         actualizarSelectorSociosParaRuta();
         renderizarQuedadas();
-        emitirAviso(
-          formularioQuedada,
-          `Quedada «${rutaCreada.titulo}» (${rutaCreada.kilometros} km) publicada con éxito en el club.`,
-          'exito',
-        );
+        const msgExito = `✅ Quedada «${rutaCreada.titulo}» (${rutaCreada.kilometros} km) publicada con éxito en el club.`;
+        mostrarAvisoLocalQuedada(msgExito, 'success');
+        emitirAviso(formularioQuedada, msgExito, 'exito');
       } catch (error) {
-        emitirAviso(
-          formularioQuedada,
-          error instanceof Error ? error.message : 'No se pudo publicar la quedada.',
-          'error',
-        );
+        const msgError = error instanceof Error ? error.message : 'No se pudo publicar la quedada.';
+        mostrarAvisoLocalQuedada(`⚠️ ${msgError}`, 'danger');
+        emitirAviso(formularioQuedada, msgError, 'error');
       }
     });
   }
