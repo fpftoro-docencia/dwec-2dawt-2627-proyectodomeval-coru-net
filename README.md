@@ -4,7 +4,7 @@
 
 Aplicación web de gestión integral para el **Club Ciclista Pedal & Cadencia**. Diseñada con estética deportiva inspirada en Specialized, permite a los socios registrarse, gestionar su perfil de membresía ciclista, su licencia federativa y su parque de bicicletas (de 0 a 3 por socio).
 
-**Web publicada:** https://club-ciclista-pedal-cadencia.vercel.app
+**Web publicada:** https://dwec-2dawt-2627-proyectodomeval-cor.vercel.app
 
 ## Mi proyecto
 

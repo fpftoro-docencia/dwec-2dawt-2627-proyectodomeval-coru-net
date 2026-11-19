@@ -48,6 +48,7 @@ test.describe('Recorrido E2E 2: Flujo completo del CRUD de Socios Ciclistas y Pe
     // 4. Editar la ficha del socio creado
     await page.getByRole('link', { name: /Editar ficha de Alejandro Valverde/i }).click();
     await expect(page).toHaveURL(/ficha\.html\?id=/);
+    await expect(page.getByLabel('Nombre y apellidos')).toHaveValue('Alejandro Valverde');
 
     await page.getByLabel('Nombre y apellidos').fill('Alejandro Valverde Belmonte');
     await page.getByRole('button', { name: /Guardar Cambios/i }).click();

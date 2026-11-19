@@ -60,14 +60,10 @@ jobs:
       - name: Instalar navegador Chromium para Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Ejecutar prueba de humo contra la web desplegada (o local si no hay PRODUCTION_URL)
+      - name: Ejecutar prueba de humo contra la web desplegada en Vercel
         env:
-          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
-        run: |
-          if [ -n "$PRODUCTION_URL" ]; then
-            export BASE_URL="$PRODUCTION_URL"
-          fi
-          npx playwright test e2e/humo.spec.js
+          BASE_URL: ${{ vars.PRODUCTION_URL || 'https://dwec-2dawt-2627-proyectodomeval-cor.vercel.app' }}
+        run: npx playwright test e2e/humo.spec.js
 
   Release:
     name: Release
