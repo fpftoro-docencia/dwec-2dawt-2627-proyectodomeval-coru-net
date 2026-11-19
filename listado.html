@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Listado de Socios · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia -->
+    <link rel="stylesheet" href="css/estilos.css" />
+    <!-- Script modular de la página de listado -->
+    <script type="module" src="js/paginas/listado.js"></script>
+  </head>
+  <body>
+    <!-- Cabecera privada con menú compartido y botón de cierre de sesión -->
+    <header class="main-header"></header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 py-4">
+      <div class="container">
+        <!-- Región de avisos accesible (role="status") -->
+        <div
+          id="contenedor-avisos"
+          class="contenedor-avisos"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <!-- Encabezado y acción principal -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+          <div>
+            <h1 class="h2 fw-bold text-uppercase mb-1">Listado de Socios Ciclistas</h1>
+            <p class="text-muted mb-0">
+              Gestión de fichas federativas y bicicletas registradas en el club
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button
+              type="button"
+              id="boton-cargar-ejemplos-barra"
+              class="btn btn-outline-dark fw-bold text-uppercase px-3"
+            >
+              + Cargar Socios Demo
+            </button>
+            <a href="#seccion-quedadas" class="btn btn-dark fw-bold text-uppercase px-3">
+              🗺️ Quedadas y Rutas
+            </a>
+            <a
+              href="ficha.html"
+              id="enlace-nuevo-socio"
+              class="btn btn-danger fw-bold text-uppercase px-3"
+            >
+              + Nuevo Socio
+            </a>
+          </div>
+        </div>
+
+        <!-- Barra de herramientas: Buscador con debounce y Contador de resultados -->
+        <section class="card shadow-sm border-0 mb-4" aria-label="Herramientas de filtrado">
+          <div class="card-body p-3 p-md-4">
+            <div class="row g-3 align-items-center justify-content-between">
+              <div class="col-12 col-md-7 col-lg-6">
+                <label for="campo-busqueda" class="form-label small fw-bold text-uppercase mb-1">
+                  Buscar socio ciclista
+                </label>
+                <input
+                  type="search"
+                  id="campo-busqueda"
+                  class="form-control"
+                  placeholder="Filtra por nombre, DNI, categoría, licencia o bicicleta..."
+                  autocomplete="off"
+                />
+              </div>
+              <div class="col-12 col-md-5 col-lg-6 text-md-end">
+                <p
+                  id="contador-resultados"
+                  class="mb-0 fw-semibold text-secondary small"
+                  aria-live="polite"
+                >
+                  0 socios registrados
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Contenedor del listado y estado vacío -->
+        <section class="card shadow-sm border-0" aria-label="Registros de socios">
+          <div class="card-body p-0">
+            <!-- Listado estructurado de socios ciclistas -->
+            <div id="contenedor-tabla">
+              <div
+                class="bg-dark text-white text-uppercase small fw-bold px-4 py-3 d-none d-lg-block"
+              >
+                <div class="row align-items-center">
+                  <div class="col-lg-3">Socio / DNI</div>
+                  <div class="col-lg-2">Categoría</div>
+                  <div class="col-lg-2">Licencia Federativa</div>
+                  <div class="col-lg-1">Cuota</div>
+                  <div class="col-lg-2">Bicicletas</div>
+                  <div class="col-lg-2 text-end">Acciones</div>
+                </div>
+              </div>
+              <div id="cuerpo-listado" class="list-group list-group-flush"></div>
+            </div>
+
+            <!-- Mensaje cuando no hay registros o no hay coincidencias -->
+            <div id="estado-vacio" class="p-5 text-center" hidden>
+              <div class="display-6 text-muted mb-2" aria-hidden="true">🚴</div>
+              <h2 id="titulo-vacio" class="h5 fw-bold">No hay socios registrados todavía</h2>
+              <p id="mensaje-vacio" class="text-muted max-w-500 mx-auto mb-3">
+                Crea el primer socio ciclista del club o carga un conjunto de socios de demostración
+                para probar el buscador y la paginación.
+              </p>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="ficha.html" class="btn btn-dark btn-sm fw-bold text-uppercase px-3">
+                  Registrar primer socio
+                </a>
+                <button
+                  type="button"
+                  id="boton-cargar-ejemplos"
+                  class="btn btn-outline-secondary btn-sm fw-bold text-uppercase px-3"
+                >
+                  Cargar socios de ejemplo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie de tarjeta con controles de paginación -->
+          <div class="card-footer bg-white border-top py-3">
+            <nav id="navegacion-paginacion" aria-label="Paginación de socios ciclistas"></nav>
+          </div>
+        </section>
+
+        <!-- SECCIÓN DE QUEDADAS Y RUTAS CICLISTAS CON MAPA INTERACTIVO -->
+        <section
+          id="seccion-quedadas"
+          class="mt-5 pt-2"
+          aria-label="Organización de quedadas y rutas ciclistas"
+        >
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <span class="badge bg-danger text-uppercase mb-1">Salidas Oficiales del Club</span>
+              <h2 class="h3 fw-bold text-uppercase mb-1">
+                Organizador de Quedadas y Rutas Ciclistas
+              </h2>
+              <p class="text-muted mb-0 small">
+                Regla federativa del club: los socios <strong>no federados</strong> solo pueden
+                diseñar <strong>1 ruta</strong>; los socios <strong>federados</strong> pueden
+                diseñar rutas ilimitadas. El <strong>Administrador</strong> supervisa todas las
+                fichas y quedadas.
+              </p>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <!-- Columna izquierda: Diseñador de ruta con Mapa Topográfico SVG -->
+            <div class="col-12 col-lg-5">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-dark text-white py-3 px-4">
+                  <h3 class="h6 fw-bold text-uppercase mb-0">🗺️ Diseñar Nueva Quedada / Ruta</h3>
+                </div>
+                <div class="card-body p-4">
+                  <form id="formulario-quedada" novalidate>
+                    <div class="mb-3">
+                      <label for="campo-socio-ruta" class="form-label small fw-bold text-uppercase">
+                        Socio ciclista que diseña la ruta
+                      </label>
+                      <select
+                        id="campo-socio-ruta"
+                        class="form-select form-select-sm"
+                        required
+                      ></select>
+                      <div
+                        id="estado-limite-socio-ruta"
+                        class="small mt-1 fw-semibold text-secondary"
+                      ></div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label
+                        for="campo-titulo-ruta"
+                        class="form-label small fw-bold text-uppercase"
+                      >
+                        Nombre de la quedada
+                      </label>
+                      <input
+                        type="text"
+                        id="campo-titulo-ruta"
+                        class="form-control form-control-sm"
+                        placeholder="Ej. Ascensión Grupal Paso del Brenner"
+                        required
+                      />
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                      <div class="col-7">
+                        <label
+                          for="campo-zona-mapa"
+                          class="form-label small fw-bold text-uppercase"
+                        >
+                          Sector / Mapa de Ruta
+                        </label>
+                        <select id="campo-zona-mapa" class="form-select form-select-sm">
+                          <option value="alpes-innsbruck">
+                            Innsbruck · Paso del Brenner (Alpes)
+                          </option>
+                          <option value="covadonga-asturias">
+                            Cangas de Onís · Lagos de Covadonga
+                          </option>
+                          <option value="tramuntana-mallorca">
+                            Sa Calobra · Serra de Tramuntana
+                          </option>
+                          <option value="guadarrama-madrid">Puerto de Navacerrada · Cotos</option>
+                        </select>
+                      </div>
+                      <div class="col-5">
+                        <label
+                          for="campo-fecha-ruta"
+                          class="form-label small fw-bold text-uppercase"
+                        >
+                          Fecha de salida
+                        </label>
+                        <input
+                          type="date"
+                          id="campo-fecha-ruta"
+                          class="form-control form-control-sm"
+                          value="2026-11-29"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                      <div class="col-6">
+                        <label
+                          for="campo-kilometros-ruta"
+                          class="form-label small fw-bold text-uppercase"
+                        >
+                          Distancia (km)
+                        </label>
+                        <input
+                          type="number"
+                          id="campo-kilometros-ruta"
+                          class="form-control form-control-sm fw-bold"
+                          min="5"
+                          max="350"
+                          step="0.5"
+                          value="92"
+                          required
+                        />
+                      </div>
+                      <div class="col-6">
+                        <label
+                          for="campo-desnivel-ruta"
+                          class="form-label small fw-bold text-uppercase"
+                        >
+                          Desnivel positivo (m+)
+                        </label>
+                        <input
+                          type="number"
+                          id="campo-desnivel-ruta"
+                          class="form-control form-control-sm"
+                          min="50"
+                          max="6000"
+                          step="10"
+                          value="2150"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Lienzo del Mapa Cartográfico Interactivo -->
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-uppercase">
+                          Mapa del Recorrido (haz clic para trazar puntos)
+                        </span>
+                        <button
+                          type="button"
+                          id="boton-reiniciar-trazado"
+                          class="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-bold"
+                        >
+                          Restaurar trazado
+                        </button>
+                      </div>
+                      <div class="contenedor-mapa-svg rounded border overflow-hidden bg-dark">
+                        <svg
+                          id="mapa-interactivo-ruta"
+                          viewBox="0 0 540 220"
+                          class="w-100 d-block"
+                          role="img"
+                          aria-label="Mapa topográfico interactivo de la ruta ciclista"
+                          style="cursor: crosshair; height: 190px"
+                        >
+                          <defs>
+                            <linearGradient id="gradienteTerreno" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stop-color="#1e293b" />
+                              <stop offset="100%" stop-color="#0f172a" />
+                            </linearGradient>
+                          </defs>
+                          <rect width="540" height="220" fill="url(#gradienteTerreno)" />
+                          <!-- Curvas topográficas y relieve alpino -->
+                          <path
+                            d="M0 190 Q 90 150 180 165 T 360 110 T 540 135 L 540 220 L 0 220 Z"
+                            fill="#1e3a2f"
+                            opacity="0.55"
+                          />
+                          <path
+                            d="M0 155 Q 140 90 250 115 T 440 50 T 540 85 L 540 220 L 0 220 Z"
+                            fill="#14532d"
+                            opacity="0.35"
+                          />
+                          <g stroke="#334155" stroke-width="1" stroke-dasharray="4 4">
+                            <line x1="0" y1="55" x2="540" y2="55" />
+                            <line x1="0" y1="110" x2="540" y2="110" />
+                            <line x1="0" y1="165" x2="540" y2="165" />
+                            <line x1="135" y1="0" x2="135" y2="220" />
+                            <line x1="270" y1="0" x2="270" y2="220" />
+                            <line x1="405" y1="0" x2="405" y2="220" />
+                          </g>
+                          <text
+                            id="etiqueta-sector-mapa"
+                            x="14"
+                            y="22"
+                            fill="#94a3b8"
+                            font-size="11"
+                            font-weight="bold"
+                          >
+                            SECTOR: INNSBRUCK · PASO DEL BRENNER
+                          </text>
+                          <text
+                            id="etiqueta-km-mapa"
+                            x="526"
+                            y="22"
+                            fill="#f8fafc"
+                            font-size="12"
+                            font-weight="bold"
+                            text-anchor="end"
+                          >
+                            92 km · 2150 m+
+                          </text>
+                          <!-- Polilínea GPS de la ruta -->
+                          <polyline
+                            id="polilinea-mapa-ruta"
+                            fill="none"
+                            stroke="#ef233c"
+                            stroke-width="4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            points="40,170 120,145 210,95 310,55 410,80 490,40"
+                          />
+                          <g id="grupo-puntos-mapa"></g>
+                        </svg>
+                      </div>
+                      <small class="text-muted d-block mt-1">
+                        💡 Haz clic sobre el mapa para trazar tu propio recorrido y recalcular los
+                        kilómetros automáticamente.
+                      </small>
+                    </div>
+
+                    <div id="aviso-quedada-local" aria-live="polite" class="mb-2"></div>
+
+                    <button
+                      type="submit"
+                      id="boton-crear-quedada"
+                      class="btn btn-danger w-100 fw-bold text-uppercase py-2"
+                    >
+                      Publicar Quedada en el Club
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna derecha: Listado de Quedadas publicadas con sus mapas -->
+            <div class="col-12 col-lg-7">
+              <div class="card shadow-sm border-0 h-100">
+                <div
+                  class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center"
+                >
+                  <h3 class="h6 fw-bold text-uppercase mb-0">🚴 Quedadas y Rutas Convocadas</h3>
+                  <span id="contador-quedadas" class="badge bg-dark">0 rutas activas</span>
+                </div>
+                <div class="card-body p-3 p-md-4">
+                  <div id="contenedor-quedadas" class="d-flex flex-column gap-3"></div>
+                  <div id="estado-vacio-quedadas" class="text-center py-4 text-muted" hidden>
+                    Todavía no hay quedadas convocadas. ¡Selecciona un socio y diseña la primera
+                    ruta en el mapa!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Plantilla <template> para cada tarjeta de Quedada de Ruta -->
+    <template id="plantilla-tarjeta-quedada">
+      <article class="card border shadow-sm tarjeta-quedada">
+        <div class="card-body p-3">
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-5">
+              <div class="rounded overflow-hidden border bg-dark">
+                <svg
+                  viewBox="0 0 540 220"
+                  class="w-100 d-block mini-mapa-quedada"
+                  style="height: 115px"
+                  aria-label="Mapa del recorrido de la quedada"
+                >
+                  <rect width="540" height="220" fill="#0f172a" />
+                  <path
+                    d="M0 175 Q 140 105 270 125 T 540 75 L 540 220 L 0 220 Z"
+                    fill="#14532d"
+                    opacity="0.45"
+                  />
+                  <polyline
+                    class="trazado-mini-mapa"
+                    fill="none"
+                    stroke="#ef233c"
+                    stroke-width="5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div class="col-12 col-md-7">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <h4 class="h6 fw-bold text-uppercase mb-0 titulo-quedada"></h4>
+                <span class="badge bg-danger km-quedada"></span>
+              </div>
+              <p class="small text-muted mb-2 meta-quedada"></p>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                <span class="badge bg-dark desnivel-quedada"></span>
+                <span class="badge bg-secondary dificultad-quedada"></span>
+                <span class="badge autor-federado-quedada"></span>
+              </div>
+              <p class="small mb-2 text-secondary participantes-quedada"></p>
+              <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <button
+                  type="button"
+                  class="btn btn-outline-dark btn-sm fw-bold boton-apuntarse-ruta"
+                >
+                  Apuntarme
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm fw-bold boton-borrar-ruta"
+                >
+                  Eliminar ruta
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <!-- Plantilla obligatoria <template> para cada socio (Requisito 14) -->
+    <template id="plantilla-fila-socio">
+      <article class="list-group-item px-4 py-3 fila-socio">
+        <div class="row align-items-center gy-2">
+          <div class="col-12 col-lg-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar-socio-contenedor flex-shrink-0">
+                <img
+                  class="foto-socio-fila rounded-circle border"
+                  alt="Foto de perfil del socio"
+                  style="width: 44px; height: 44px; object-fit: cover"
+                  hidden
+                />
+                <span
+                  class="avatar-socio-iniciales rounded-circle bg-dark text-white fw-bold align-items-center justify-content-center"
+                  style="width: 44px; height: 44px; font-size: 0.85rem"
+                ></span>
+              </div>
+              <div>
+                <div class="fw-bold celda-nombre"></div>
+                <small class="text-muted d-block celda-dni"></small>
+                <small
+                  class="badge bg-light text-dark border mt-1 celda-propietario"
+                  hidden
+                ></small>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-2">
+            <span class="badge bg-dark celda-categoria"></span>
+          </div>
+          <div class="col-6 col-lg-2">
+            <span class="badge celda-federado"></span>
+            <small class="d-block text-muted mt-1 celda-licencia"></small>
+          </div>
+          <div class="col-6 col-lg-1 fw-semibold celda-cuota"></div>
+          <div class="col-6 col-lg-2">
+            <div class="galeria-fotos-bicis d-flex gap-1 mb-1"></div>
+            <span class="celda-bicicletas small text-secondary d-block"></span>
+          </div>
+          <div class="col-12 col-lg-2 text-lg-end">
+            <div class="d-inline-flex gap-2">
+              <a class="btn btn-outline-dark btn-sm fw-bold enlace-editar" href="ficha.html">
+                Editar
+              </a>
+              <button type="button" class="btn btn-outline-danger btn-sm fw-bold boton-borrar">
+                Borrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <!-- Diálogo nativo <dialog> para confirmar el borrado (Requisito 14) -->
+    <dialog
+      id="dialogo-confirmar-borrado"
+      class="dialogo-club border-0 rounded-3 shadow-lg p-0"
+      aria-labelledby="titulo-dialogo-borrado"
+    >
+      <div class="p-4">
+        <h2 id="titulo-dialogo-borrado" class="h5 fw-bold text-uppercase mb-2">
+          Confirmar baja de socio
+        </h2>
+        <p id="mensaje-dialogo-borrado" class="text-secondary mb-4"></p>
+        <div class="d-flex justify-content-end gap-2">
+          <button
+            type="button"
+            id="boton-cancelar-borrado"
+            class="btn btn-outline-secondary fw-bold px-3"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="boton-confirmar-borrado" class="btn btn-danger fw-bold px-3">
+            Sí, eliminar socio
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+  </body>
+</html>

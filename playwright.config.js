@@ -3,10 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Con BASE_URL, las pruebas se ejecutan contra esa dirección (por ejemplo, la web desplegada) y no se
 // arranca ningún servidor. Sin ella, se prueba la web local, servida con `serve` en el puerto 3901.
-const BASE_URL = process.env.BASE_URL;
+const BASE_URL = process.env.BASE_URL || undefined;
 
 export default defineConfig({
   testDir: 'e2e',
+  fullyParallel: true,
   // En la integración continua: sin test.only olvidados, y el informe en HTML
   forbidOnly: Boolean(process.env.CI),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
@@ -19,5 +20,9 @@ export default defineConfig({
         url: 'http://localhost:3901',
         reuseExistingServer: true,
       },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ],
 });

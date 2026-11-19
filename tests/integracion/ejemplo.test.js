@@ -18,7 +18,9 @@ function iniciarPagina(documento, { alAceptar }) {
   formulario.addEventListener('blur', (evento) => evento.target === campo && validar(), true);
   formulario.addEventListener('submit', (evento) => {
     evento.preventDefault();
-    if (validar()) alAceptar(campo.value.trim());
+    if (validar()) {
+      alAceptar(campo.value.trim());
+    }
   });
 }
 

@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Compilación y distribuibles
+dist/
+docs/
+
+# Informes de pruebas y cobertura
+coverage/
+playwright-report/
+test-results/
+
+# Archivos de sistema y entorno de desarrollo
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

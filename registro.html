@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inscripción de Socio · Club Ciclista Pedal & Cadencia</title>
+    <!-- CSS de Bootstrap (solo CSS, sin JavaScript) -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Hoja de estilos propia inspirada en Specialized -->
+    <link rel="stylesheet" href="css/estilos.css" />
+    <!-- Script modular de la página de registro -->
+    <script type="module" src="js/paginas/registro.js"></script>
+  </head>
+  <body>
+    <!-- Barra superior de utilidades -->
+    <aside class="top-utility-bar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span>Club Ciclista Oficial · Temporada 2026/2027</span>
+        <div class="d-flex gap-3">
+          <a href="index.html">¿Ya tienes cuenta? Inicia sesión</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Cabecera principal -->
+    <header class="main-header">
+      <div class="container d-flex justify-content-between align-items-center py-2">
+        <a href="index.html" class="brand-logo">
+          <span>PEDAL<span class="brand-badge">&</span>CADENCIA</span>
+        </a>
+        <nav aria-label="Navegación pública" class="d-none d-md-flex gap-2">
+          <a href="index.html" class="nav-link-custom">Inicio</a>
+          <a href="registro.html" class="nav-link-custom active">Inscripción</a>
+        </nav>
+        <div>
+          <a href="index.html" class="btn btn-outline-dark btn-sm fw-bold px-3">INICIAR SESIÓN</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-7 col-xl-6">
+            <div class="form-card-container">
+              <div class="form-card-header">
+                <span class="text-uppercase fw-bold text-danger small">Nueva Alta</span>
+                <h1 class="form-card-title mt-1">Alta de Socio Ciclista</h1>
+                <small class="text-muted"
+                  >Crea tu cuenta para acceder a la gestión y convocatorias del club</small
+                >
+              </div>
+
+              <!-- Región de avisos accesible (Requisito 2 y 8) -->
+              <div
+                id="contenedor-avisos"
+                class="contenedor-avisos"
+                role="status"
+                aria-live="polite"
+              ></div>
+
+              <form id="formulario-registro" novalidate>
+                <!-- Nombre de usuario -->
+                <div class="mb-3">
+                  <label for="campo-usuario" class="form-label">Nombre de usuario</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="campo-usuario"
+                    name="usuario"
+                    required
+                    autocomplete="username"
+                    placeholder="Ej. ciclista_pro"
+                    aria-describedby="ayuda-usuario error-usuario"
+                  />
+                  <div id="ayuda-usuario" class="form-text">
+                    Entre 3 y 20 caracteres: solo letras, cifras o guion bajo.
+                  </div>
+                  <div id="error-usuario" class="invalid-feedback">
+                    El nombre de usuario debe ser válido y no estar ocupado.
+                  </div>
+                </div>
+
+                <!-- Correo electrónico -->
+                <div class="mb-3">
+                  <label for="campo-correo" class="form-label">Correo electrónico</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="campo-correo"
+                    name="correo"
+                    required
+                    autocomplete="email"
+                    placeholder="usuario@ejemplo.com"
+                    aria-describedby="error-correo"
+                  />
+                  <div id="error-correo" class="invalid-feedback">
+                    Introduce una dirección de correo válida.
+                  </div>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="mb-3">
+                  <label for="campo-clave" class="form-label">Contraseña</label>
+                  <div class="input-group">
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="campo-clave"
+                      name="clave"
+                      required
+                      autocomplete="new-password"
+                      placeholder="••••••••"
+                      aria-describedby="requisitos-clave error-clave"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary boton-toggle-clave"
+                      id="boton-toggle-clave"
+                      aria-label="Mostrar contraseña"
+                      title="Mostrar contraseña"
+                      aria-pressed="false"
+                    >
+                      <span class="icono-ojo" aria-hidden="true">👁️</span>
+                    </button>
+                    <div id="error-clave" class="invalid-feedback">
+                      La contraseña no cumple todos los requisitos exigidos.
+                    </div>
+                  </div>
+
+                  <!-- Lista de requisitos dinámicos en vivo (Requisito 5) -->
+                  <ul
+                    id="requisitos-clave"
+                    class="password-requirements"
+                    aria-label="Requisitos de seguridad de la contraseña"
+                  >
+                    <li id="req-longitud">
+                      <span class="req-icon" aria-hidden="true">•</span> Al menos 8 caracteres
+                    </li>
+                    <li id="req-minuscula">
+                      <span class="req-icon" aria-hidden="true">•</span> Al menos una letra
+                      minúscula
+                    </li>
+                    <li id="req-mayuscula">
+                      <span class="req-icon" aria-hidden="true">•</span> Al menos una letra
+                      mayúscula
+                    </li>
+                    <li id="req-cifra">
+                      <span class="req-icon" aria-hidden="true">•</span> Al menos un número
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Repetición de Contraseña -->
+                <div class="mb-4">
+                  <label for="campo-clave-repetida" class="form-label">Repetir contraseña</label>
+                  <div class="input-group">
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="campo-clave-repetida"
+                      name="claveRepetida"
+                      required
+                      autocomplete="new-password"
+                      placeholder="••••••••"
+                      aria-describedby="error-clave-repetida"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary boton-toggle-clave"
+                      id="boton-toggle-clave-repetida"
+                      aria-label="Mostrar contraseña repetida"
+                      title="Mostrar contraseña repetida"
+                      aria-pressed="false"
+                    >
+                      <span class="icono-ojo" aria-hidden="true">👁️</span>
+                    </button>
+                    <div id="error-clave-repetida" class="invalid-feedback">
+                      Las contraseñas deben ser exactamente iguales.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Casilla de aceptación -->
+                <div class="mb-4 form-check">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="campo-aceptacion"
+                    name="aceptacion"
+                    required
+                    aria-describedby="error-aceptacion"
+                  />
+                  <label class="form-check-label" for="campo-aceptacion">
+                    Acepto el reglamento interno del club y la normativa federativa de protección de
+                    datos.
+                  </label>
+                  <div id="error-aceptacion" class="invalid-feedback">
+                    Debes aceptar las condiciones para formalizar el alta.
+                  </div>
+                </div>
+
+                <!-- Botón de Envío -->
+                <button type="submit" id="boton-registro" class="btn-specialized-dark">
+                  Completar Inscripción
+                </button>
+              </form>
+
+              <div class="mt-4 pt-3 border-top text-center">
+                <p class="mb-0 text-muted" style="font-size: 0.9rem">
+                  ¿Ya tienes una cuenta de socio?
+                  <a href="index.html" class="fw-bold text-dark">Inicia sesión</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="site-footer">
+      <div class="container text-center">
+        <p class="fw-bold mb-1">CLUB CICLISTA PEDAL & CADENCIA</p>
+        <p class="text-muted mb-0">DWEC 2º DAWT · Proyecto DOM 2026/2027</p>
+      </div>
+    </footer>
+  </body>
+</html>
