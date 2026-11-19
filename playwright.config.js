@@ -19,5 +19,13 @@ export default defineConfig({
         url: 'http://localhost:3901',
         reuseExistingServer: true,
       },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    ...(process.env.TODOS_MOTORES
+      ? [
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+        ]
+      : []),
+  ],
 });
