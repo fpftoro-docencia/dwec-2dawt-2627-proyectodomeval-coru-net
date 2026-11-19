@@ -365,6 +365,17 @@ body {
   font-size: 1.5rem;
 }
 
+.avatar-socio-iniciales {
+  display: inline-flex;
+}
+
+.avatar-ficha-img[hidden],
+.avatar-ficha-placeholder[hidden],
+.avatar-socio-iniciales[hidden],
+.foto-socio-fila[hidden] {
+  display: none !important;
+}
+
 .miniatura-bici-fila {
   width: 38px;
   height: 26px;
